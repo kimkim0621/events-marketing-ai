@@ -45,13 +45,50 @@ streamlit run streamlit_app.py
 
 ## 🌐 デプロイ
 
-### Streamlit Cloud
-1. GitHubリポジトリにプッシュ
-2. [Streamlit Cloud](https://streamlit.io/cloud)でアカウント作成
-3. リポジトリを選択してデプロイ
+### 🚀 Supabase + Streamlit Cloud（推奨）
+
+#### ステップ1: Supabaseデータベース準備
+1. [Supabase](https://supabase.com)でアカウント作成
+2. 新しいプロジェクト作成（Tokyoリージョン推奨）
+3. Settings > Database で接続情報を取得
+4. `.streamlit/secrets.toml.example`を参考に設定
+
+#### ステップ2: GitHubリポジトリ作成
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/events-marketing-ai.git
+git branch -M main
+git push -u origin main
+```
+
+#### ステップ3: Streamlit Cloudデプロイ
+1. [Streamlit Cloud](https://streamlit.io/cloud)でGitHubアカウントでログイン
+2. 「New app」をクリック
+3. リポジトリ選択: `YOUR_USERNAME/events-marketing-ai`
+4. Main file path: `streamlit_app.py`
+5. 「Advanced settings」で環境変数設定:
+   ```
+   [database]
+   connection_string = "postgresql://postgres.YOUR_PROJECT_ID:YOUR_PASSWORD@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres"
+   ```
+6. 「Deploy!」をクリック
+
+#### ✅ デプロイ完了
+- チーム共有用URL: `https://YOUR_APP_NAME.streamlit.app/`
+- 自動SSL証明書とHTTPS対応
+- Supabaseで複数メンバー同時利用可能
+
+### 🆓 代替案: Google Sheets + Streamlit Cloud
+簡単なデータ共有にはGoogle Sheetsオプションも利用可能  
+詳細: `QUICK_GOOGLE_SHEETS_SETUP.md`
+
+### 🔒 セキュリティ設定
+- `secrets.toml`は`.gitignore`で除外済み
+- Streamlit Cloud側でのみ機密情報を設定
+- Supabase Row Level Security (RLS)有効化推奨
 
 ### 環境変数（オプション）
 - `ANTHROPIC_API_KEY`: Claude API使用時に設定
+- `database.connection_string`: Supabase接続文字列
 
 ## 📁 プロジェクト構造
 
