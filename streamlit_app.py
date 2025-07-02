@@ -157,28 +157,76 @@ def main():
         show_main_interface()
 
 def initialize_database():
-    """データベースとテーブルの初期化"""
+    """データベースとテーブルの初期化（詳細デバッグ付き）"""
+    # デバッグ情報を表示
+    st.markdown("### 🔧 データベース初期化状況")
+    
+    col_debug1, col_debug2 = st.columns(2)
+    
+    with col_debug1:
+        st.write(f"**SHARED_DB_AVAILABLE**: {SHARED_DB_AVAILABLE}")
+        st.write(f"**INTERNAL_DATA_AVAILABLE**: {INTERNAL_DATA_AVAILABLE}")
+        st.write(f"**DB_PATH**: {DB_PATH}")
+        st.write(f"**現在のディレクトリ**: {os.getcwd()}")
+    
+    with col_debug2:
+        st.write(f"**data ディレクトリ存在**: {os.path.exists('data')}")
+        st.write(f"**data/events_marketing.db 存在**: {os.path.exists('data/events_marketing.db')}")
+        st.write(f"**STREAMLIT_CLOUD**: {'STREAMLIT_CLOUD' in os.environ}")
+    
     if SHARED_DB_AVAILABLE:
         # Supabaseデータベースの初期化
         try:
+            st.info("🔍 Supabaseデータベース接続を試行中...")
+            
             if 'shared_db' not in st.session_state:
+                st.write("📡 新しいSupabase接続を作成中...")
                 db = setup_shared_database()
                 if db:
                     st.session_state['shared_db'] = db
                     st.success("✅ Supabaseデータベース接続完了")
                 else:
                     st.error("❌ Supabaseデータベース接続に失敗しました")
+                    st.info("💡 ローカルSQLiteにフォールバックします")
+            else:
+                st.success("✅ 既存のSupabase接続を使用中")
+                
         except Exception as e:
             st.error(f"❌ データベース初期化エラー: {str(e)}")
-    else:
-        # ローカルSQLiteの初期化
-        try:
-            if not os.path.exists(DB_PATH):
-                # ローカルデータベースファイルが存在しない場合は作成
-                os.makedirs(os.path.dirname(DB_PATH) if os.path.dirname(DB_PATH) else ".", exist_ok=True)
-                st.info("📁 ローカルデータベースを初期化中...")
-        except Exception as e:
-            st.warning(f"⚠️ ローカルデータベース初期化: {str(e)}")
+            st.write(f"**エラー詳細**: {type(e).__name__}")
+            st.info("💡 ローカルSQLiteにフォールバックします")
+    
+    # ローカルSQLiteの状況確認
+    try:
+        # パスの詳細確認
+        if os.path.dirname(DB_PATH):
+            db_dir = os.path.dirname(DB_PATH)
+            st.write(f"**データベースディレクトリ**: {db_dir}")
+            st.write(f"**ディレクトリ存在**: {os.path.exists(db_dir)}")
+            
+            if not os.path.exists(db_dir):
+                os.makedirs(db_dir, exist_ok=True)
+                st.info(f"📁 ディレクトリを作成しました: {db_dir}")
+        
+        st.write(f"**データベースファイル存在**: {os.path.exists(DB_PATH)}")
+        
+        if not os.path.exists(DB_PATH):
+            st.warning("⚠️ ローカルデータベースファイルが存在しません")
+            # 簡単なSQLiteファイルを作成
+            import sqlite3
+            conn = sqlite3.connect(DB_PATH)
+            conn.execute("CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY)")
+            conn.commit()
+            conn.close()
+            st.info(f"📁 ローカルデータベースを初期化しました: {DB_PATH}")
+        else:
+            st.success(f"✅ ローカルデータベースファイルが存在します: {DB_PATH}")
+            
+    except Exception as e:
+        st.error(f"❌ ローカルデータベース初期化エラー: {str(e)}")
+        st.write(f"**エラー詳細**: {type(e).__name__}")
+    
+    st.markdown("---")
 
 def show_main_interface():
     """メイン施策提案インターフェース"""

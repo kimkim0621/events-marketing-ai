@@ -1,9 +1,18 @@
 import os
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import streamlit as st
 from typing import Optional, Dict, Any
 import json
+
+# PostgreSQL関連のインポート（エラーハンドリング付き）
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    PSYCOPG2_AVAILABLE = True
+    st.write("✅ psycopg2 import successful")
+except ImportError as e:
+    PSYCOPG2_AVAILABLE = False
+    st.error(f"❌ psycopg2 import failed: {str(e)}")
+    st.info("💡 PostgreSQL接続が利用できません。SQLiteフォールバックのみ利用可能です。")
 
 class SharedDatabase:
     """共有データベース管理クラス（Supabase PostgreSQL）"""
@@ -37,21 +46,37 @@ class SharedDatabase:
         return "sqlite:///data/events_marketing.db"
     
     def connect(self):
-        """データベースに接続"""
+        """データベースに接続（詳細デバッグ付き）"""
         try:
             if self.connection_string.startswith('postgresql://'):
+                if not PSYCOPG2_AVAILABLE:
+                    st.error("❌ psycopg2が利用できません。PostgreSQL接続をスキップします。")
+                    return False
+                    
+                st.write("🔧 PostgreSQL接続を試行中...")
                 self.connection = psycopg2.connect(
                     self.connection_string,
                     cursor_factory=RealDictCursor
                 )
+                st.write("✅ PostgreSQL接続成功")
                 return True
             else:
                 # SQLiteフォールバック
+                st.write("🔧 SQLite接続を試行中...")
                 import sqlite3
-                self.connection = sqlite3.connect(self.connection_string.replace('sqlite:///', ''))
+                sqlite_path = self.connection_string.replace('sqlite:///', '')
+                st.write(f"**SQLiteパス**: {sqlite_path}")
+                self.connection = sqlite3.connect(sqlite_path)
+                st.write("✅ SQLite接続成功")
                 return True
         except Exception as e:
-            st.error(f"データベース接続エラー: {str(e)}")
+            if 'psycopg2' in str(e):
+                st.error(f"PostgreSQL接続エラー: {str(e)}")
+                if hasattr(e, 'pgcode'):
+                    st.write(f"**エラーコード**: {e.pgcode}")
+            else:
+                st.error(f"データベース接続エラー: {str(e)}")
+            st.write(f"**エラータイプ**: {type(e).__name__}")
             return False
     
     def create_tables(self):
@@ -185,14 +210,35 @@ class SharedDatabase:
 
 # 使用例とセットアップ関数
 def setup_shared_database():
-    """共有データベースをセットアップ"""
-    db = SharedDatabase()
-    if db.connect():
-        if db.create_tables():
-            st.success("✅ 共有データベースの準備完了！")
-            return db
+    """共有データベースをセットアップ（詳細デバッグ付き）"""
+    try:
+        st.write("🔧 データベース接続を開始...")
+        db = SharedDatabase()
+        
+        # 接続文字列の詳細表示
+        connection_string = db.connection_string
+        if connection_string.startswith('postgresql://'):
+            # パスワード部分を隠して表示
+            safe_connection = connection_string.split('@')[1] if '@' in connection_string else connection_string
+            st.write(f"**接続先**: {safe_connection}")
         else:
-            st.error("❌ テーブル作成に失敗しました")
-    else:
-        st.error("❌ データベース接続に失敗しました")
-    return None 
+            st.write(f"**接続先**: {connection_string}")
+        
+        st.write("📡 データベースに接続中...")
+        if db.connect():
+            st.write("✅ 接続成功！テーブルを作成中...")
+            if db.create_tables():
+                st.success("✅ 共有データベースの準備完了！")
+                return db
+            else:
+                st.error("❌ テーブル作成に失敗しました")
+                return None
+        else:
+            st.error("❌ データベース接続に失敗しました")
+            return None
+    except Exception as e:
+        st.error(f"❌ セットアップエラー: {str(e)}")
+        st.write(f"**エラータイプ**: {type(e).__name__}")
+        import traceback
+        st.code(traceback.format_exc(), language='python')
+        return None 
