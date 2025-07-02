@@ -140,6 +140,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
+    # データベース初期化を最初に実行
+    initialize_database()
+    
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
     # タブの追加
@@ -150,6 +153,30 @@ def main():
     
     with main_tab:
         show_main_interface()
+
+def initialize_database():
+    """データベースとテーブルの初期化"""
+    if SHARED_DB_AVAILABLE:
+        # Supabaseデータベースの初期化
+        try:
+            if 'shared_db' not in st.session_state:
+                db = setup_shared_database()
+                if db:
+                    st.session_state['shared_db'] = db
+                    st.success("✅ Supabaseデータベース接続完了")
+                else:
+                    st.error("❌ Supabaseデータベース接続に失敗しました")
+        except Exception as e:
+            st.error(f"❌ データベース初期化エラー: {str(e)}")
+    else:
+        # ローカルSQLiteの初期化
+        try:
+            if not os.path.exists(DB_PATH):
+                # ローカルデータベースファイルが存在しない場合は作成
+                os.makedirs(os.path.dirname(DB_PATH) if os.path.dirname(DB_PATH) else ".", exist_ok=True)
+                st.info("📁 ローカルデータベースを初期化中...")
+        except Exception as e:
+            st.warning(f"⚠️ ローカルデータベース初期化: {str(e)}")
 
 def show_main_interface():
     """メイン施策提案インターフェース"""
@@ -330,17 +357,24 @@ def show_main_interface():
 
 def show_data_management():
     """データ管理画面"""
-    if not INTERNAL_DATA_AVAILABLE:
-        st.error("🚫 社内データシステムが利用できません")
+    st.markdown("## 📊 データ管理システム")
+    
+    # データベース接続状況を表示
+    if SHARED_DB_AVAILABLE and 'shared_db' in st.session_state:
+        st.info("🌐 Supabase共有データベースを使用中")
+        # Supabaseでのシンプルなデータ管理を実装
+        show_supabase_data_management()
         return
-    
-    st.markdown("## 📊 社内データ管理システム")
-    
-    # 初期化
-    if 'data_system' not in st.session_state:
-        st.session_state['data_system'] = InternalDataSystem()
-    
-    data_system = st.session_state['data_system']
+    elif INTERNAL_DATA_AVAILABLE:
+        st.info("💻 ローカルデータシステムを使用中")
+        # 初期化
+        if 'data_system' not in st.session_state:
+            st.session_state['data_system'] = InternalDataSystem()
+        data_system = st.session_state['data_system']
+    else:
+        st.warning("⚠️ データシステムが利用できません（基本機能のみ利用可能）")
+        show_basic_data_management()
+        return
     
     # データ概要の表示
     col1, col2 = st.columns([2, 1])
@@ -1902,20 +1936,176 @@ def show_data_cleaning_interface():
             except Exception as e:
                 st.error(f"❌ バックアップ作成エラー: {str(e)}")
     
-    with col_backup2:
-        # バックアップ一覧を表示（簡易版）
-        try:
-            backup_dir = Path("data/backups")
-            if backup_dir.exists():
-                backups = list(backup_dir.glob("*.db"))
-                if backups:
-                    st.info(f"📋 利用可能なバックアップ: {len(backups)}個")
+            with col_backup2:
+            # バックアップ一覧を表示（簡易版）
+            try:
+                backup_dir = Path("data/backups")
+                if backup_dir.exists():
+                    backups = list(backup_dir.glob("*.db"))
+                    if backups:
+                        st.info(f"📋 利用可能なバックアップ: {len(backups)}個")
+                    else:
+                        st.info("📋 バックアップはありません")
                 else:
-                    st.info("📋 バックアップはありません")
-            else:
-                st.info("📋 バックアップディレクトリがありません")
+                    st.info("📋 バックアップディレクトリがありません")
+            except Exception as e:
+                st.warning(f"バックアップ確認エラー: {str(e)}")
+
+def show_supabase_data_management():
+    """Supabase用のシンプルなデータ管理画面"""
+    shared_db = st.session_state.get('shared_db')
+    
+    if not shared_db:
+        st.error("❌ Supabaseデータベース接続がありません")
+        return
+    
+    # タブ構成
+    overview_tab, add_event_tab, view_data_tab = st.tabs(["📊 概要", "➕ イベント追加", "👀 データ確認"])
+    
+    with overview_tab:
+        st.markdown("### 📈 データベース概要")
+        
+        # 簡単な統計情報を表示
+        try:
+            events = shared_db.get_all_events()
+            st.metric("📅 登録済みイベント数", f"{len(events)}件")
+            
+            if events:
+                st.markdown("#### 📋 最近のイベント")
+                recent_events = events[:5]  # 最新5件
+                for event in recent_events:
+                    st.markdown(f"- **{event['event_name']}** ({event['category']}) - {event['created_at']}")
         except Exception as e:
-            st.warning(f"バックアップ確認エラー: {str(e)}")
+            st.error(f"データ取得エラー: {str(e)}")
+    
+    with add_event_tab:
+        st.markdown("### ➕ 新しいイベントデータを追加")
+        
+        with st.form("add_event_form"):
+            event_name = st.text_input("📝 イベント名*", placeholder="例: AI技術セミナー2025")
+            theme = st.text_area("🎯 テーマ・内容*", placeholder="例: 最新のAI技術動向と実践事例")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                category = st.selectbox("📋 カテゴリ", 
+                    ["conference", "seminar", "workshop", "webinar", "networking"],
+                    format_func=lambda x: {"conference": "カンファレンス", "seminar": "セミナー", 
+                                          "workshop": "ワークショップ", "webinar": "ウェビナー", 
+                                          "networking": "ネットワーキング"}[x])
+                target_attendees = st.number_input("🎯 目標参加者数", min_value=1, value=100)
+                budget = st.number_input("💰 予算（円）", min_value=0, value=500000, step=50000)
+            
+            with col2:
+                actual_attendees = st.number_input("✅ 実際の参加者数", min_value=0, value=0)
+                actual_cost = st.number_input("💸 実際のコスト（円）", min_value=0, value=0, step=10000)
+                event_date = st.date_input("📅 開催日", value=datetime.now().date())
+            
+            submitted = st.form_submit_button("💾 イベントデータを保存", type="primary")
+            
+            if submitted:
+                if event_name and theme:
+                    try:
+                        event_data = {
+                            'event_name': event_name,
+                            'theme': theme,
+                            'category': category,
+                            'target_attendees': target_attendees,
+                            'actual_attendees': actual_attendees,
+                            'budget': budget,
+                            'actual_cost': actual_cost,
+                            'event_date': event_date,
+                            'campaigns_used': [],
+                            'performance_metrics': {}
+                        }
+                        
+                        if shared_db.insert_event_data(event_data, "streamlit_user"):
+                            st.success("✅ イベントデータを保存しました！")
+                            st.balloons()
+                        else:
+                            st.error("❌ データ保存に失敗しました")
+                    except Exception as e:
+                        st.error(f"❌ 保存エラー: {str(e)}")
+                else:
+                    st.error("❌ イベント名とテーマは必須です")
+    
+    with view_data_tab:
+        st.markdown("### 👀 登録済みデータ")
+        
+        try:
+            events = shared_db.get_all_events()
+            
+            if events:
+                # データフレームに変換して表示
+                import pandas as pd
+                df = pd.DataFrame(events)
+                
+                # 列名を日本語に変換
+                column_mapping = {
+                    'event_name': 'イベント名',
+                    'category': 'カテゴリ',
+                    'target_attendees': '目標参加者',
+                    'actual_attendees': '実際参加者',
+                    'budget': '予算',
+                    'actual_cost': '実際コスト',
+                    'event_date': '開催日',
+                    'created_at': '登録日'
+                }
+                
+                # 表示用に列を選択・リネーム
+                display_columns = ['event_name', 'category', 'target_attendees', 'actual_attendees', 
+                                 'budget', 'actual_cost', 'event_date', 'created_at']
+                df_display = df[display_columns].rename(columns=column_mapping)
+                
+                st.dataframe(df_display, use_container_width=True)
+                
+                # 簡単な分析
+                if len(events) > 1:
+                    st.markdown("#### 📊 簡単な分析")
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        avg_conversion = (df['actual_attendees'] / df['target_attendees']).mean() * 100
+                        st.metric("平均達成率", f"{avg_conversion:.1f}%")
+                    
+                    with col2:
+                        total_budget = df['budget'].sum()
+                        st.metric("総予算", f"¥{total_budget:,}")
+                    
+                    with col3:
+                        total_participants = df['actual_attendees'].sum()
+                        st.metric("総参加者数", f"{total_participants:,}人")
+            else:
+                st.info("📝 まだデータがありません。「イベント追加」タブからデータを追加してください。")
+                
+        except Exception as e:
+            st.error(f"❌ データ表示エラー: {str(e)}")
+
+def show_basic_data_management():
+    """基本的なデータ管理画面（フォールバック）"""
+    st.markdown("### 🔧 基本モード")
+    st.info("💡 現在、基本的なデータ管理機能のみ利用可能です。")
+    
+    st.markdown("#### 📝 手動データ入力")
+    
+    with st.form("basic_data_form"):
+        st.markdown("**イベント情報**")
+        event_name = st.text_input("イベント名")
+        event_description = st.text_area("イベント説明")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            target_num = st.number_input("目標参加者数", min_value=0, value=100)
+        with col2:
+            budget = st.number_input("予算（円）", min_value=0, value=500000)
+        
+        submitted = st.form_submit_button("💾 保存")
+        
+        if submitted:
+            if event_name:
+                st.success(f"✅ イベント「{event_name}」の情報を記録しました")
+                st.info("💡 この情報は一時的なものです。完全な機能を利用するには、適切なデータベース接続が必要です。")
+            else:
+                st.error("❌ イベント名を入力してください")
     
     # データ品質チェック
     st.markdown("---")
