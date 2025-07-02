@@ -1468,7 +1468,7 @@ def show_knowledge_management(data_system):
             st.markdown("**🎯 適用条件（オプション）**")
             conditions_text = st.text_area(
                 "この知見が適用される条件があれば記載してください",
-                height=60,
+                height=80,
                 placeholder="例: BtoBイベント、参加者数100名以上、予算50万円以上",
                 help="条件を指定すると、該当するイベントでのみこの知見が提案されます"
             )
