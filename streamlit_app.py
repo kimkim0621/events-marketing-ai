@@ -11,6 +11,8 @@ from pathlib import Path
 import asyncio
 import io
 from typing import List
+import plotly.express as px
+import plotly.graph_objects as go
 
 # 共有データベース設定
 try:
@@ -1936,20 +1938,20 @@ def show_data_cleaning_interface():
             except Exception as e:
                 st.error(f"❌ バックアップ作成エラー: {str(e)}")
     
-            with col_backup2:
-            # バックアップ一覧を表示（簡易版）
-            try:
-                backup_dir = Path("data/backups")
-                if backup_dir.exists():
-                    backups = list(backup_dir.glob("*.db"))
-                    if backups:
-                        st.info(f"📋 利用可能なバックアップ: {len(backups)}個")
-                    else:
-                        st.info("📋 バックアップはありません")
+    with col_backup2:
+        # バックアップ一覧を表示（簡易版）
+        try:
+            backup_dir = Path("data/backups")
+            if backup_dir.exists():
+                backups = list(backup_dir.glob("*.db"))
+                if backups:
+                    st.info(f"📋 利用可能なバックアップ: {len(backups)}個")
                 else:
-                    st.info("📋 バックアップディレクトリがありません")
-            except Exception as e:
-                st.warning(f"バックアップ確認エラー: {str(e)}")
+                    st.info("📋 バックアップはありません")
+            else:
+                st.info("📋 バックアップディレクトリがありません")
+        except Exception as e:
+            st.warning(f"バックアップ確認エラー: {str(e)}")
 
 def show_supabase_data_management():
     """Supabase用のシンプルなデータ管理画面"""
