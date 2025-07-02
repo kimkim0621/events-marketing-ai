@@ -16,29 +16,41 @@ from typing import List
 try:
     from database_setup import SharedDatabase, setup_shared_database
     SHARED_DB_AVAILABLE = True
-    st.session_state.db_mode = "shared"  # shared または local
+    if 'db_mode' not in st.session_state:
+        st.session_state.db_mode = "shared"  # shared または local
 except ImportError:
     SHARED_DB_AVAILABLE = False
-    st.session_state.db_mode = "local"
+    if 'db_mode' not in st.session_state:
+        st.session_state.db_mode = "local"
 
 # クラウド対応のデータベースパス設定
 if "STREAMLIT_CLOUD" in os.environ or not os.path.exists("data"):
     # Streamlit Cloud環境またはdataディレクトリが存在しない場合
     DB_PATH = "events_marketing.db"
-    # 必要なディレクトリを作成
-    os.makedirs("backups", exist_ok=True)
+    # 必要なディレクトリを作成（エラー処理付き）
+    try:
+        os.makedirs("backups", exist_ok=True)
+    except Exception:
+        pass  # Streamlit Cloudでは書き込み権限がない場合がある
 else:
     # ローカル環境
     DB_PATH = "data/events_marketing.db"
-    os.makedirs("data/backups", exist_ok=True)
+    try:
+        os.makedirs("data/backups", exist_ok=True)
+    except Exception:
+        pass
 
 # 社内データシステムのインポート
 try:
     from internal_data_system import InternalDataSystem
     from data_cleaner import DataCleaner
     INTERNAL_DATA_AVAILABLE = True
-except ImportError:
-    st.error("⚠️ 社内データシステムが利用できません")
+except ImportError as e:
+    # Streamlit Cloudでは警告のみ表示
+    if "STREAMLIT_CLOUD" in os.environ:
+        st.warning("⚠️ 社内データシステムが利用できません（クラウド環境）")
+    else:
+        st.error(f"⚠️ 社内データシステムが利用できません: {str(e)}")
     INTERNAL_DATA_AVAILABLE = False
 
 
