@@ -1,0 +1,6 @@
+イベント名,カテゴリ,テーマ,目標申込数,実際申込数,予算,実際コスト,開催日,使用施策
+AI技術セミナー2024,seminar,AI・機械学習,120,98,600000,550000,2024-06-15,"email_marketing,paid_advertising,social_media"
+ウェブ開発ワークショップ,workshop,ウェブ開発,60,55,250000,220000,2024-07-20,"social_media,content_marketing"
+データサイエンス講演会,conference,データサイエンス,250,215,1200000,1050000,2024-08-10,"paid_advertising,email_marketing,social_media,pr"
+DevOps実践セミナー,seminar,DevOps,80,72,400000,380000,2024-09-05,"email_marketing,social_media"
+モバイルアプリ開発会議,conference,モバイル開発,180,162,800000,750000,2024-10-12,"paid_advertising,content_marketing,social_media" 
