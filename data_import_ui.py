@@ -11,6 +11,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import json
+import os
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
@@ -18,7 +19,23 @@ class DataImportSystem:
     """データインポートシステム"""
     
     def __init__(self, db_path: str = "data/events_marketing.db"):
-        self.db_path = db_path
+        # Streamlit Cloud対応のデータベースパス
+        is_cloud = ("STREAMLIT_CLOUD" in os.environ or 
+                   "STREAMLIT_SHARING" in os.environ or 
+                   not os.path.exists("/tmp"))
+        
+        if is_cloud:
+            # Streamlit Cloud環境では一時的なデータベースを使用
+            self.db_path = ":memory:"
+        else:
+            # ローカル環境
+            self.db_path = db_path
+            # データディレクトリの作成
+            try:
+                os.makedirs("data", exist_ok=True)
+            except Exception:
+                pass
+        
         self.ensure_tables()
     
     def ensure_tables(self):
