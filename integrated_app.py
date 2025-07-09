@@ -88,41 +88,183 @@ def main():
     """メインアプリケーション"""
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
-    # 列のスタイル設定
+    # リサイズ可能な2列レイアウト用のCSS/JavaScript
     st.markdown("""
     <style>
-    .column-panel {
+    .resizable-container {
+        display: flex;
+        width: 100%;
+        min-height: 80vh;
+        position: relative;
         border: 1px solid #e9ecef;
         border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .resizable-left {
+        flex: 0 0 50%;
         padding: 1rem;
+        overflow-y: auto;
         background: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+    }
+    
+    .resizable-right {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+        background: #ffffff;
+    }
+    
+    .resize-handle {
+        width: 8px;
+        background: #e9ecef;
+        cursor: col-resize;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        user-select: none;
+        z-index: 100;
+    }
+    
+    .resize-handle:hover {
+        background: #1f77b4;
+        width: 12px;
+    }
+    
+    .resize-handle::after {
+        content: '⋮⋮⋮';
+        color: #666;
+        font-size: 12px;
+        line-height: 4px;
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+        letter-spacing: 2px;
+    }
+    
+    .resize-handle:hover::after {
+        color: white;
+    }
+    
+    .column-panel {
         min-height: 500px;
         margin-bottom: 1rem;
     }
     
-    .column-panel-right {
-        background: #ffffff;
+    .drag-instruction {
+        text-align: center;
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        background: #e9ecef;
+        border-radius: 4px;
     }
     </style>
+    
+    <script>
+    function setupResizable() {
+        const container = document.querySelector('.resizable-container');
+        const leftPanel = document.querySelector('.resizable-left');
+        const rightPanel = document.querySelector('.resizable-right');
+        const handle = document.querySelector('.resize-handle');
+        
+        if (!container || !leftPanel || !rightPanel || !handle) {
+            setTimeout(setupResizable, 100);
+            return;
+        }
+        
+        let isResizing = false;
+        let startX = 0;
+        let startLeftWidth = 0;
+        
+        handle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startLeftWidth = leftPanel.offsetWidth;
+            
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const containerWidth = container.offsetWidth;
+            const deltaX = e.clientX - startX;
+            const newLeftWidth = startLeftWidth + deltaX;
+            const newLeftPercent = (newLeftWidth / containerWidth) * 100;
+            
+            // 最小・最大幅の制限（20%〜80%）
+            if (newLeftPercent >= 20 && newLeftPercent <= 80) {
+                leftPanel.style.flex = `0 0 ${newLeftPercent}%`;
+                rightPanel.style.flex = '1';
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
+    
+    // DOM読み込み後に実行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupResizable);
+    } else {
+        setupResizable();
+    }
+    
+    // Streamlitの再レンダリング後にも実行
+    setTimeout(setupResizable, 100);
+    setTimeout(setupResizable, 500);
+    </script>
+    """, unsafe_allow_html=True)
+    
+    # 使用方法の説明
+    st.markdown("""
+    <div class="drag-instruction">
+    💡 中央の境界線をドラッグして列幅を調整できます（Cursorと同じ操作方法）
+    </div>
     """, unsafe_allow_html=True)
     
     # データインポートシステムの初期化
     import_system = DataImportSystem()
     
-    # 2列レイアウト（1:1の比率）
+    # HTML構造でリサイズ可能なレイアウトを作成
+    st.markdown("""
+    <div class="resizable-container">
+        <div class="resizable-left">
+            <div class="column-panel">
+                <h3>📝 施策提案のための情報入力</h3>
+                <div id="left-content"></div>
+            </div>
+        </div>
+        <div class="resize-handle"></div>
+        <div class="resizable-right">
+            <div class="column-panel">
+                <h3>📊 データインポート</h3>
+                <div id="right-content"></div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 通常のStreamlitコンテンツ（フォールバック用）
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown('<div class="column-panel">', unsafe_allow_html=True)
-        st.markdown("### 📝 施策提案のための情報入力")
         show_proposal_input()
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="column-panel column-panel-right">', unsafe_allow_html=True)
-        st.markdown("### 📊 データインポート")
         show_data_import_interface(import_system)
-        st.markdown('</div>', unsafe_allow_html=True)
 
 def show_proposal_input():
     """施策提案のための情報入力フォーム"""
