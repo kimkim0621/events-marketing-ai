@@ -282,6 +282,13 @@ if (document.body) {
 
 def main():
     """メインアプリケーション"""
+    # データベースの初期化（初回起動時のみ）
+    try:
+        from services.data_initializer import initialize_app_data
+        initialize_app_data()
+    except Exception as e:
+        st.error(f"データ初期化エラー: {e}")
+    
     # タイトル
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
