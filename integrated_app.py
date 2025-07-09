@@ -659,29 +659,82 @@ def show_participant_import(import_system):
 
 def show_media_import(import_system):
     """有償メディアデータのインポート"""
-    st.markdown("**CSVファイル一括インポート**")
     
-    template_csv = """メディア名,リーチ可能数,ターゲット業界,ターゲット職種,ターゲット企業規模,費用(税抜),メディアタイプ,説明,連絡先情報
+    # タブで個別入力とCSVインポートを分ける
+    tab1, tab2 = st.tabs(["📝 個別入力", "📂 CSVインポート"])
+    
+    with tab1:
+        st.markdown("**個別でメディアデータを入力**")
+        
+        # 基本情報
+        col1, col2 = st.columns(2)
+        with col1:
+            media_name = st.text_input("メディア名", placeholder="例: Meta広告", key="media_name_input")
+            reachable_count = st.number_input("リーチ可能数", min_value=0, value=0, key="reachable_count_input")
+            cost_excluding_tax = st.number_input("費用（税抜）", min_value=0, value=0, key="cost_input")
+        
+        with col2:
+            media_type = st.selectbox(
+                "メディアタイプ",
+                ["Web広告", "メール配信", "SNS", "イベントプラットフォーム", "メディア掲載", "その他"],
+                key="media_type_input"
+            )
+            
+            target_industry = st.text_input("ターゲット業界", placeholder="例: IT・ソフトウェア", key="target_industry_input")
+            target_job_title = st.text_input("ターゲット職種", placeholder="例: エンジニア", key="target_job_title_input")
+        
+        # 詳細情報
+        target_company_size = st.text_input("ターゲット企業規模", placeholder="例: 101-1000名", key="target_company_size_input")
+        description = st.text_area("説明", placeholder="例: Facebook・Instagram広告による集客", key="description_input")
+        contact_info = st.text_input("連絡先情報", placeholder="例: meta-ads@example.com", key="contact_info_input")
+        
+        if st.button("メディアデータを追加", key="add_media_button"):
+            if media_name.strip():
+                media_data = {
+                    'media_name': media_name.strip(),
+                    'reachable_count': reachable_count,
+                    'target_industry': target_industry.strip() if target_industry.strip() else None,
+                    'target_job_title': target_job_title.strip() if target_job_title.strip() else None,
+                    'target_company_size': target_company_size.strip() if target_company_size.strip() else None,
+                    'cost_excluding_tax': cost_excluding_tax,
+                    'media_type': media_type,
+                    'description': description.strip() if description.strip() else None,
+                    'contact_info': contact_info.strip() if contact_info.strip() else None
+                }
+                
+                result = import_system.add_paid_media_data(media_data)
+                if result["success"]:
+                    st.success(result["message"])
+                    st.rerun()
+                else:
+                    st.error(result["error"])
+            else:
+                st.error("メディア名は必須項目です")
+    
+    with tab2:
+        st.markdown("**CSVファイル一括インポート**")
+        
+        template_csv = """メディア名,リーチ可能数,ターゲット業界,ターゲット職種,ターゲット企業規模,費用(税抜),メディアタイプ,説明,連絡先情報
 Meta広告,1000000,IT・ソフトウェア,エンジニア,すべて,2000000,Web広告,Facebook・Instagram広告,meta-ads@example.com"""
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button(
-            "📥 テンプレートDL",
-            data=template_csv,
-            file_name="media_template.csv",
-            mime="text/csv"
-        )
-    
-    with col2:
-        uploaded_file = st.file_uploader("CSVファイル", type=['csv'], key="media_csv")
-    
-    if uploaded_file and st.button("インポート", key="import_media"):
-        result = import_system.import_media_csv(uploaded_file)
-        if result["success"]:
-            st.success(result["message"])
-        else:
-            st.error(result["error"])
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.download_button(
+                "📥 テンプレートDL",
+                data=template_csv,
+                file_name="media_template.csv",
+                mime="text/csv"
+            )
+        
+        with col2:
+            uploaded_file = st.file_uploader("CSVファイル", type=['csv'], key="media_csv")
+        
+        if uploaded_file and st.button("インポート", key="import_media"):
+            result = import_system.import_media_csv(uploaded_file)
+            if result["success"]:
+                st.success(result["message"])
+            else:
+                st.error(result["error"])
 
 def show_knowledge_import(import_system):
     """知見データのインポート"""
