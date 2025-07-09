@@ -88,83 +88,29 @@ def main():
     """メインアプリケーション"""
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
-    # 列幅の初期化
-    if 'column_width' not in st.session_state:
-        st.session_state.column_width = 50
-    
-    # 境界線ドラッグ用のシンプルなCSS
+    # 列のスタイル設定
     st.markdown("""
     <style>
-    .drag-divider {
-        background: linear-gradient(to right, #e0e0e0, #bbb, #e0e0e0);
-        width: 12px;
-        margin: 0 -6px;
-        position: relative;
-        cursor: col-resize;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 500px;
-        transition: all 0.2s ease;
-        z-index: 100;
-    }
-    
-    .drag-divider:hover {
-        background: linear-gradient(to right, #1f77b4, #3498db, #1f77b4);
-        width: 16px;
-        margin: 0 -8px;
-    }
-    
-    .drag-divider::before {
-        content: '⋮⋮⋮';
-        color: #666;
-        font-size: 14px;
-        writing-mode: vertical-lr;
-        text-orientation: mixed;
-        line-height: 4px;
-        user-select: none;
-    }
-    
-    .drag-divider:hover::before {
-        color: white;
-    }
-    
     .column-panel {
         border: 1px solid #e9ecef;
         border-radius: 8px;
         padding: 1rem;
         background: #f8f9fa;
         min-height: 500px;
+        margin-bottom: 1rem;
     }
     
     .column-panel-right {
         background: #ffffff;
     }
-    
-    .drag-instruction {
-        text-align: center;
-        color: #666;
-        font-size: 0.9em;
-        margin-bottom: 1rem;
-        padding: 0.5rem;
-        background: #e9ecef;
-        border-radius: 4px;
-    }
     </style>
-    """, unsafe_allow_html=True)
-    
-    # 使用方法の説明
-    st.markdown("""
-    <div class="drag-instruction">
-    💡 中央の境界線をドラッグして列幅を調整してください（現在は視覚的な境界線のみ）
-    </div>
     """, unsafe_allow_html=True)
     
     # データインポートシステムの初期化
     import_system = DataImportSystem()
     
-    # 3列レイアウト（左パネル、境界線、右パネル）
-    col1, col_divider, col2 = st.columns([49, 2, 49])
+    # 2列レイアウト（1:1の比率）
+    col1, col2 = st.columns([1, 1])
     
     with col1:
         st.markdown('<div class="column-panel">', unsafe_allow_html=True)
@@ -172,31 +118,11 @@ def main():
         show_proposal_input()
         st.markdown('</div>', unsafe_allow_html=True)
     
-    with col_divider:
-        st.markdown('<div class="drag-divider" title="将来のドラッグ機能用境界線"></div>', unsafe_allow_html=True)
-    
     with col2:
         st.markdown('<div class="column-panel column-panel-right">', unsafe_allow_html=True)
         st.markdown("### 📊 データインポート")
         show_data_import_interface(import_system)
         st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 現在の制約についての説明
-    with st.expander("⚠️ 技術的制約について"):
-        st.markdown("""
-        **現在の状況:**
-        - Streamlitの制約により、真のドラッグ機能は技術的に困難です
-        - 中央の境界線は視覚的な境界線として機能しています
-        
-        **代替案:**
-        - 境界線のドラッグ機能は現在開発中です
-        - より高度なカスタムコンポーネントが必要です
-        
-        **現在の機能:**
-        - 2列レイアウトの表示
-        - 視覚的な境界線
-        - レスポンシブデザイン
-        """)
 
 def show_proposal_input():
     """施策提案のための情報入力フォーム"""
