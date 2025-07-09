@@ -27,56 +27,56 @@ st.set_page_config(
     page_title="イベント集客施策提案AI",
     page_icon="🎯",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"  # サイドバーを折りたたみ
 )
 
-# 基本CSS
+# 基本CSS - 最も確実な方法で上部余白を削除
 st.markdown("""
 <style>
-    /* Streamlitのデフォルト余白を完全に削除 */
+    /* 全体のリセット */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    /* Streamlitの基本構造をリセット */
+    .stApp {
+        top: 0 !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* メインコンテナの余白を完全削除 */
     .main .block-container {
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
+        margin-top: 0 !important;
         max-width: 100% !important;
     }
     
-    .stApp > header {
-        background-color: transparent !important;
-        height: 0px !important;
-    }
-    
-    .stApp {
-        margin-top: 0 !important;
+    /* ヘッダー関連を全て削除 */
+    header[data-testid="stHeader"] {
+        display: none !important;
+        height: 0 !important;
     }
     
     div[data-testid="stToolbar"] {
         display: none !important;
     }
     
-    /* Streamlitのヘッダーを非表示 */
-    header[data-testid="stHeader"] {
+    .stApp > header {
         display: none !important;
     }
     
-    /* メインコンテンツの余白を削除 */
-    .main {
-        padding-top: 0rem !important;
+    /* デコレーション要素を削除 */
+    div[data-testid="stDecoration"] {
+        display: none !important;
     }
     
-    /* 最上部の余白を削除 */
-    .stApp > div:first-child {
-        padding-top: 0 !important;
-    }
-    
-    /* 包括的な余白リセット */
-    .stApp, .main, .block-container, .element-container {
-        margin: 0 !important;
-        padding-top: 0 !important;
-    }
-    
-    /* 最初の子要素の余白を削除 */
+    /* 最初の要素の余白を強制削除 */
     .main > div:first-child,
     .block-container > div:first-child,
     .element-container:first-child {
@@ -84,21 +84,28 @@ st.markdown("""
         padding-top: 0 !important;
     }
     
-    /* Streamlitのデフォルトスタイルを上書き */
-    .css-1d391kg, .css-18e3th9, .css-1dp5vir {
-        padding-top: 0 !important;
+    /* 全てのStreamlit要素の上部余白を削除 */
+    .stMarkdown:first-child,
+    .element-container:first-child,
+    div[data-testid="element-container"]:first-child {
         margin-top: 0 !important;
+        padding-top: 0 !important;
     }
     
+    /* タイトルを最上部に配置 */
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
         color: #1f77b4;
         text-align: center;
-        margin-bottom: 1rem;
-        margin-top: 0;
-        padding-top: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        margin-bottom: 1rem !important;
+        position: relative;
+        top: 0;
     }
+    
+    /* その他のスタイル */
     .sub-header {
         font-size: 1.5rem;
         font-weight: bold;
@@ -145,6 +152,54 @@ st.markdown("""
 
 def main():
     """メインアプリケーション"""
+    # JavaScriptで確実に上部余白を削除
+    st.markdown("""
+    <script>
+    function removeTopMargin() {
+        // 全ての可能な上部余白要素を削除
+        const elements = [
+            '.main',
+            '.block-container',
+            '.element-container',
+            '.stApp',
+            'header[data-testid="stHeader"]',
+            'div[data-testid="stToolbar"]',
+            '.stMarkdown:first-child'
+        ];
+        
+        elements.forEach(selector => {
+            const els = document.querySelectorAll(selector);
+            els.forEach(el => {
+                el.style.marginTop = '0';
+                el.style.paddingTop = '0';
+            });
+        });
+        
+        // 最初の子要素の余白を削除
+        const firstElements = document.querySelectorAll('.main > div:first-child, .block-container > div:first-child');
+        firstElements.forEach(el => {
+            el.style.marginTop = '0';
+            el.style.paddingTop = '0';
+        });
+        
+        // ヘッダーを非表示
+        const headers = document.querySelectorAll('header[data-testid="stHeader"]');
+        headers.forEach(header => {
+            header.style.display = 'none';
+        });
+    }
+    
+    // 複数回実行して確実に適用
+    setTimeout(removeTopMargin, 100);
+    setTimeout(removeTopMargin, 500);
+    setTimeout(removeTopMargin, 1000);
+    
+    // MutationObserverで動的な変更を監視
+    const observer = new MutationObserver(removeTopMargin);
+    observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+    """, unsafe_allow_html=True)
+    
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
     # リサイズ可能な2列レイアウト用のCSS/JavaScript
