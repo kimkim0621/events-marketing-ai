@@ -1026,7 +1026,7 @@ def generate_recommendations_fallback(event_name, event_category, event_theme, i
     
     recommendations["performance_analysis"] = {
         "total_estimated_reach": total_reach,
-        "total_estimated_conversion": total_conversion,
+        "total_estimated_conversions": total_conversion,
         "total_cost": total_cost,
         "average_cpa": total_cost / total_conversion if total_conversion > 0 else 0
     }
@@ -1053,7 +1053,10 @@ def show_recommendations_in_tab(recommendations):
     with col1:
         st.metric("総リーチ数", f"{recommendations['performance_analysis']['total_estimated_reach']:,}")
     with col2:
-        st.metric("予想申込数", f"{recommendations['performance_analysis']['total_estimated_conversions']:.0f}")
+        # キー名の統一（total_estimated_conversion または total_estimated_conversions）
+        conversion_key = 'total_estimated_conversions' if 'total_estimated_conversions' in recommendations['performance_analysis'] else 'total_estimated_conversion'
+        conversions = recommendations['performance_analysis'].get(conversion_key, 0)
+        st.metric("予想申込数", f"{conversions:.0f}")
     with col3:
         st.metric("総費用", f"¥{recommendations['performance_analysis']['total_cost']:,.0f}")
     with col4:
@@ -1062,8 +1065,17 @@ def show_recommendations_in_tab(recommendations):
     # 目標達成率の表示（新規追加）
     if "target_achievement_rate" in recommendations['performance_analysis']:
         achievement_rate = recommendations['performance_analysis']['target_achievement_rate']
-        st.progress(achievement_rate)
-        st.write(f"目標達成率: {achievement_rate * 100:.1f}%")
+        # プログレスバーの値を0.0-1.0の範囲に制限
+        progress_value = min(1.0, max(0.0, achievement_rate))
+        st.progress(progress_value)
+        
+        # 達成率の色分け表示
+        if achievement_rate >= 1.0:
+            st.success(f"🎯 目標達成率: {achievement_rate * 100:.1f}% (目標達成見込み！)")
+        elif achievement_rate >= 0.8:
+            st.warning(f"⚡ 目標達成率: {achievement_rate * 100:.1f}% (目標に近い)")
+        else:
+            st.info(f"📊 目標達成率: {achievement_rate * 100:.1f}%")
     
     # 施策一覧
     st.markdown("### 🚀 推奨施策")
