@@ -304,13 +304,14 @@ def main():
     with col2:
         # タブ切り替えUI
         if st.session_state.show_recommendations and st.session_state.recommendations:
-            tab1, tab2 = st.tabs(["📊 データインポート", "🎯 施策提案結果"])
+            # タブの順序を変更：施策提案結果を左、データインポートを右に
+            tab1, tab2 = st.tabs(["🎯 施策提案結果", "📊 データインポート"])
             
             with tab1:
-                show_data_import_interface(import_system)
+                show_recommendations_in_tab(st.session_state.recommendations)
             
             with tab2:
-                show_recommendations_in_tab(st.session_state.recommendations)
+                show_data_import_interface(import_system)
         else:
             st.markdown("### 📊 データインポート")
             show_data_import_interface(import_system)
@@ -509,6 +510,9 @@ def show_proposal_input():
                 # セッション状態を更新
                 st.session_state.recommendations = recommendations
                 st.session_state.show_recommendations = True
+                
+                # 成功メッセージを表示
+                st.success("✅ 施策提案が完了しました！右側の「🎯 施策提案結果」タブで結果をご確認ください。")
                 st.rerun()
         else:
             st.error("必須項目（イベント名、テーマ、業種、職種）を入力してください")
