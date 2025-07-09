@@ -142,10 +142,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    # データインポートUIを呼び出し
+    # 統合版UIを呼び出し
     try:
-        from data_import_ui import main as data_import_main
-        data_import_main()
+        from integrated_app import main as integrated_main
+        integrated_main()
     except ImportError:
         # フォールバック: 元のUI
         initialize_database()

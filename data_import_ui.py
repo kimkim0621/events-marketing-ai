@@ -591,375 +591,368 @@ def main():
     with tab1:
         st.header("📋 施策実績データの入力")
         
-        # 入力方法の選択
-        input_method = st.radio(
-            "データ入力方法を選択",
-            ["CSVファイル一括インポート", "WEB UI個別入力"],
-            key="campaign_input_method"
-        )
+        # CSVファイル一括インポート
+        st.subheader("📁 CSVファイル一括インポート")
+        st.markdown("**必要な列:** 施策名, カンファレンス名, テーマ・カテゴリ, 形式, ターゲット(業種), ターゲット(職種), ターゲット(従業員規模), 配信数/PV, クリック数, 申込(CV数), 費用(税抜), CPA")
         
-        if input_method == "CSVファイル一括インポート":
-            st.subheader("📁 CSVファイル一括インポート")
-            st.markdown("**必要な列:** 施策名, カンファレンス名, テーマ・カテゴリ, 形式, ターゲット(業種), ターゲット(職種), ターゲット(従業員規模), 配信数/PV, クリック数, 申込(CV数), 費用(税抜), CPA")
-            
-            # CSVテンプレートダウンロード
-            template_csv = """施策名,カンファレンス名,テーマ・カテゴリ,形式,ターゲット(業種),ターゲット(職種),ターゲット(従業員規模),配信数/PV,クリック数,申込(CV数),費用(税抜),CPA
+        # CSVテンプレートダウンロード
+        template_csv = """施策名,カンファレンス名,テーマ・カテゴリ,形式,ターゲット(業種),ターゲット(職種),ターゲット(従業員規模),配信数/PV,クリック数,申込(CV数),費用(税抜),CPA
 FCメルマガ,AI技術セミナー,AI・機械学習,ハイブリッド,IT・ソフトウェア,エンジニア,すべて,50000,500,50,0,0
 Meta広告,AI技術セミナー,AI・機械学習,ハイブリッド,IT・ソフトウェア,エンジニア,すべて,100000,2000,100,1000000,10000"""
-            
+        
+        col1, col2 = st.columns([1, 1])
+        with col1:
             st.download_button(
                 label="📥 CSVテンプレートをダウンロード",
                 data=template_csv,
                 file_name="campaign_template.csv",
                 mime="text/csv"
             )
-            
+        
+        with col2:
             uploaded_file = st.file_uploader(
                 "CSVファイルをアップロード",
                 type=['csv'],
                 key="campaign_csv"
             )
-            
-            if uploaded_file is not None:
-                if st.button("インポート実行", key="import_campaign"):
-                    with st.spinner("データをインポート中..."):
-                        result = import_system.import_conference_campaign_csv(uploaded_file)
-                        
-                        if result["success"]:
-                            st.success(result["message"])
-                            st.info(f"処理済み行数: {result['total_rows']}")
-                        else:
-                            st.error(result["error"])
         
-        else:  # WEB UI個別入力
-            st.subheader("📝 WEB UI個別入力")
-            
-            with st.form("campaign_form"):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    campaign_name = st.text_input("施策名*", placeholder="例: FCメルマガ")
-                    conference_name = st.text_input("カンファレンス名*", placeholder="例: AI技術セミナー")
-                    theme_category = st.text_input("テーマ・カテゴリ*", placeholder="例: AI・機械学習")
-                    format_type = st.selectbox("形式*", ["ハイブリッド", "オンライン", "オフライン"])
-                    target_industry = st.text_input("ターゲット(業種)", placeholder="例: IT・ソフトウェア")
-                    target_job_title = st.text_input("ターゲット(職種)", placeholder="例: エンジニア")
-                
-                with col2:
-                    target_company_size = st.text_input("ターゲット(従業員規模)", placeholder="例: 1-100名")
-                    distribution_count = st.number_input("配信数/PV", min_value=0, value=0)
-                    click_count = st.number_input("クリック数", min_value=0, value=0)
-                    conversion_count = st.number_input("申込(CV数)", min_value=0, value=0)
-                    cost_excluding_tax = st.number_input("費用(税抜)", min_value=0, value=0)
-                    cpa = st.number_input("CPA", min_value=0, value=0)
-                
-                submitted = st.form_submit_button("データを追加")
-                
-                if submitted and campaign_name and conference_name and theme_category:
-                    campaign_data = {
-                        'campaign_name': campaign_name,
-                        'conference_name': conference_name,
-                        'theme_category': theme_category,
-                        'format': format_type,
-                        'target_industry': target_industry,
-                        'target_job_title': target_job_title,
-                        'target_company_size': target_company_size,
-                        'distribution_count': distribution_count,
-                        'click_count': click_count,
-                        'conversion_count': conversion_count,
-                        'cost_excluding_tax': cost_excluding_tax,
-                        'cpa': cpa
-                    }
-                    
-                    result = import_system.add_campaign_data(campaign_data)
+        if uploaded_file is not None:
+            if st.button("インポート実行", key="import_campaign"):
+                with st.spinner("データをインポート中..."):
+                    result = import_system.import_conference_campaign_csv(uploaded_file)
                     
                     if result["success"]:
                         st.success(result["message"])
-                        st.rerun()
+                        st.info(f"処理済み行数: {result['total_rows']}")
                     else:
                         st.error(result["error"])
-                elif submitted:
-                    st.error("必須項目（施策名、カンファレンス名、テーマ・カテゴリ）を入力してください")
+        
+        # 区切り線
+        st.markdown("---")
+        
+        # WEB UI個別入力
+        st.subheader("📝 WEB UI個別入力")
+        
+        with st.form("campaign_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                campaign_name = st.text_input("施策名*", placeholder="例: FCメルマガ")
+                conference_name = st.text_input("カンファレンス名*", placeholder="例: AI技術セミナー")
+                theme_category = st.text_input("テーマ・カテゴリ*", placeholder="例: AI・機械学習")
+                format_type = st.selectbox("形式*", ["ハイブリッド", "オンライン", "オフライン"])
+                target_industry = st.text_input("ターゲット(業種)", placeholder="例: IT・ソフトウェア")
+                target_job_title = st.text_input("ターゲット(職種)", placeholder="例: エンジニア")
+            
+            with col2:
+                target_company_size = st.text_input("ターゲット(従業員規模)", placeholder="例: 1-100名")
+                distribution_count = st.number_input("配信数/PV", min_value=0, value=0)
+                click_count = st.number_input("クリック数", min_value=0, value=0)
+                conversion_count = st.number_input("申込(CV数)", min_value=0, value=0)
+                cost_excluding_tax = st.number_input("費用(税抜)", min_value=0, value=0)
+                cpa = st.number_input("CPA", min_value=0, value=0)
+            
+            submitted = st.form_submit_button("データを追加")
+            
+            if submitted and campaign_name and conference_name and theme_category:
+                campaign_data = {
+                    'campaign_name': campaign_name,
+                    'conference_name': conference_name,
+                    'theme_category': theme_category,
+                    'format': format_type,
+                    'target_industry': target_industry,
+                    'target_job_title': target_job_title,
+                    'target_company_size': target_company_size,
+                    'distribution_count': distribution_count,
+                    'click_count': click_count,
+                    'conversion_count': conversion_count,
+                    'cost_excluding_tax': cost_excluding_tax,
+                    'cpa': cpa
+                }
+                
+                result = import_system.add_campaign_data(campaign_data)
+                
+                if result["success"]:
+                    st.success(result["message"])
+                    st.rerun()
+                else:
+                    st.error(result["error"])
+            elif submitted:
+                st.error("必須項目（施策名、カンファレンス名、テーマ・カテゴリ）を入力してください")
     
     # タブ2: 参加者属性データ
     with tab2:
         st.header("👥 参加者属性データの入力")
         
-        # 入力方法の選択
-        input_method = st.radio(
-            "データ入力方法を選択",
-            ["CSVファイル一括インポート", "WEB UI個別入力"],
-            key="participant_input_method"
-        )
+        # CSVファイル一括インポート
+        st.subheader("📁 CSVファイル一括インポート")
+        st.markdown("**必要な列:** 職種, 役職, 業種, 企業名, 従業員規模")
         
-        if input_method == "CSVファイル一括インポート":
-            st.subheader("📁 CSVファイル一括インポート")
-            st.markdown("**必要な列:** 職種, 役職, 業種, 企業名, 従業員規模")
-            
-            # CSVテンプレートダウンロード
-            template_csv = """職種,役職,業種,企業名,従業員規模
+        # CSVテンプレートダウンロード
+        template_csv = """職種,役職,業種,企業名,従業員規模
 エンジニア,シニアエンジニア,IT・ソフトウェア,テック株式会社,101-1000名
 マネージャー,開発マネージャー,IT・ソフトウェア,イノベーション株式会社,1001-5000名
 CTO,最高技術責任者,製造業,マニュファクチャリング株式会社,5001名以上"""
-            
+        
+        col1, col2 = st.columns([1, 1])
+        with col1:
             st.download_button(
                 label="📥 CSVテンプレートをダウンロード",
                 data=template_csv,
                 file_name="participant_template.csv",
                 mime="text/csv"
             )
-            
-            conference_name = st.text_input("関連するカンファレンス名（オプション）")
-            
-            uploaded_file = st.file_uploader(
-                "CSVファイルをアップロード",
-                type=['csv'],
-                key="participant_csv"
-            )
-            
-            if uploaded_file is not None:
-                if st.button("インポート実行", key="import_participant"):
-                    with st.spinner("データをインポート中..."):
-                        result = import_system.import_participant_csv(uploaded_file, conference_name)
-                        
-                        if result["success"]:
-                            st.success(result["message"])
-                            st.info(f"処理済み行数: {result['total_rows']}")
-                        else:
-                            st.error(result["error"])
         
-        else:  # WEB UI個別入力
-            st.subheader("📝 WEB UI個別入力")
-            
-            with st.form("participant_form"):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    job_title = st.text_input("職種*", placeholder="例: エンジニア")
-                    position = st.text_input("役職", placeholder="例: シニアエンジニア")
-                    industry = st.text_input("業種*", placeholder="例: IT・ソフトウェア")
-                
-                with col2:
-                    company_name = st.text_input("企業名", placeholder="例: テック株式会社")
-                    company_size = st.selectbox("従業員規模", ["1-100名", "101-1000名", "1001-5000名", "5001名以上"])
-                    conference_name = st.text_input("関連カンファレンス名", placeholder="例: AI技術セミナー")
-                
-                submitted = st.form_submit_button("データを追加")
-                
-                if submitted and job_title and industry:
-                    participant_data = {
-                        'job_title': job_title,
-                        'position': position,
-                        'industry': industry,
-                        'company_name': company_name,
-                        'company_size': company_size,
-                        'conference_name': conference_name
-                    }
-                    
-                    result = import_system.add_participant_data(participant_data)
+        with col2:
+            conference_name = st.text_input("関連するカンファレンス名（オプション）")
+        
+        uploaded_file = st.file_uploader(
+            "CSVファイルをアップロード",
+            type=['csv'],
+            key="participant_csv"
+        )
+        
+        if uploaded_file is not None:
+            if st.button("インポート実行", key="import_participant"):
+                with st.spinner("データをインポート中..."):
+                    result = import_system.import_participant_csv(uploaded_file, conference_name)
                     
                     if result["success"]:
                         st.success(result["message"])
-                        st.rerun()
+                        st.info(f"処理済み行数: {result['total_rows']}")
                     else:
                         st.error(result["error"])
-                elif submitted:
-                    st.error("必須項目（職種、業種）を入力してください")
+        
+        # 区切り線
+        st.markdown("---")
+        
+        # WEB UI個別入力
+        st.subheader("📝 WEB UI個別入力")
+        
+        with st.form("participant_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                job_title = st.text_input("職種*", placeholder="例: エンジニア")
+                position = st.text_input("役職", placeholder="例: シニアエンジニア")
+                industry = st.text_input("業種*", placeholder="例: IT・ソフトウェア")
+            
+            with col2:
+                company_name = st.text_input("企業名", placeholder="例: テック株式会社")
+                company_size = st.selectbox("従業員規模", ["1-100名", "101-1000名", "1001-5000名", "5001名以上"])
+                conference_name_form = st.text_input("関連カンファレンス名", placeholder="例: AI技術セミナー")
+            
+            submitted = st.form_submit_button("データを追加")
+            
+            if submitted and job_title and industry:
+                participant_data = {
+                    'job_title': job_title,
+                    'position': position,
+                    'industry': industry,
+                    'company_name': company_name,
+                    'company_size': company_size,
+                    'conference_name': conference_name_form
+                }
+                
+                result = import_system.add_participant_data(participant_data)
+                
+                if result["success"]:
+                    st.success(result["message"])
+                    st.rerun()
+                else:
+                    st.error(result["error"])
+            elif submitted:
+                st.error("必須項目（職種、業種）を入力してください")
     
     # タブ3: 有償メディアデータ
     with tab3:
         st.header("💰 有償メディアデータの入力")
         
-        # 入力方法の選択
-        input_method = st.radio(
-            "データ入力方法を選択",
-            ["CSVファイル一括インポート", "WEB UI個別入力"],
-            key="media_input_method"
-        )
+        # CSVファイル一括インポート
+        st.subheader("📁 CSVファイル一括インポート")
+        st.markdown("**必要な列:** メディア名, リーチ可能数, ターゲット業界, ターゲット職種, ターゲット企業規模, 費用(税抜), メディアタイプ, 説明, 連絡先情報")
         
-        if input_method == "CSVファイル一括インポート":
-            st.subheader("📁 CSVファイル一括インポート")
-            st.markdown("**必要な列:** メディア名, リーチ可能数, ターゲット業界, ターゲット職種, ターゲット企業規模, 費用(税抜), メディアタイプ, 説明, 連絡先情報")
-            
-            # CSVテンプレートダウンロード
-            template_csv = """メディア名,リーチ可能数,ターゲット業界,ターゲット職種,ターゲット企業規模,費用(税抜),メディアタイプ,説明,連絡先情報
+        # CSVテンプレートダウンロード
+        template_csv = """メディア名,リーチ可能数,ターゲット業界,ターゲット職種,ターゲット企業規模,費用(税抜),メディアタイプ,説明,連絡先情報
 Meta広告,1000000,IT・ソフトウェア,エンジニア,すべて,2000000,Web広告,Facebook・Instagram広告,meta-ads@example.com
 日経Xtech,500000,IT・ソフトウェア,エンジニア・マネージャー,1001名以上,2000000,メディア掲載,技術者向けメディア,nikkei-xtech@example.com
 TechPlay,200000,IT・ソフトウェア,エンジニア,すべて,700000,イベント,技術者向けイベント支援,techplay@example.com"""
-            
+        
+        col1, col2 = st.columns([1, 1])
+        with col1:
             st.download_button(
                 label="📥 CSVテンプレートをダウンロード",
                 data=template_csv,
                 file_name="media_template.csv",
                 mime="text/csv"
             )
-            
+        
+        with col2:
             uploaded_file = st.file_uploader(
                 "CSVファイルをアップロード",
                 type=['csv'],
                 key="media_csv"
             )
-            
-            if uploaded_file is not None:
-                if st.button("インポート実行", key="import_media"):
-                    with st.spinner("データをインポート中..."):
-                        result = import_system.import_media_csv(uploaded_file)
-                        
-                        if result["success"]:
-                            st.success(result["message"])
-                            st.info(f"処理済み行数: {result['total_rows']}")
-                        else:
-                            st.error(result["error"])
         
-        else:  # WEB UI個別入力
-            st.subheader("📝 WEB UI個別入力")
-            
-            with st.form("media_form"):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    media_name = st.text_input("メディア名*", placeholder="例: Meta広告")
-                    reachable_count = st.number_input("リーチ可能数", min_value=0, value=0)
-                    target_industry = st.text_input("ターゲット業界", placeholder="例: IT・ソフトウェア")
-                    target_job_title = st.text_input("ターゲット職種", placeholder="例: エンジニア")
-                
-                with col2:
-                    target_company_size = st.text_input("ターゲット企業規模", placeholder="例: すべて")
-                    cost_excluding_tax = st.number_input("費用（税抜）", min_value=0, value=0)
-                    media_type = st.selectbox("メディアタイプ", ["Web広告", "メルマガ", "メディア掲載", "イベント", "その他"])
-                    description = st.text_area("説明", placeholder="メディアの詳細説明")
-                
-                contact_info = st.text_input("連絡先情報", placeholder="例: contact@example.com")
-                
-                submitted = st.form_submit_button("データを追加")
-                
-                if submitted and media_name:
-                    media_data = {
-                        'media_name': media_name,
-                        'reachable_count': reachable_count,
-                        'target_industry': target_industry,
-                        'target_job_title': target_job_title,
-                        'target_company_size': target_company_size,
-                        'cost_excluding_tax': cost_excluding_tax,
-                        'media_type': media_type,
-                        'description': description,
-                        'contact_info': contact_info
-                    }
-                    
-                    result = import_system.add_paid_media_data(media_data)
+        if uploaded_file is not None:
+            if st.button("インポート実行", key="import_media"):
+                with st.spinner("データをインポート中..."):
+                    result = import_system.import_media_csv(uploaded_file)
                     
                     if result["success"]:
                         st.success(result["message"])
-                        st.rerun()
+                        st.info(f"処理済み行数: {result['total_rows']}")
                     else:
                         st.error(result["error"])
-                elif submitted:
-                    st.error("必須項目（メディア名）を入力してください")
+        
+        # 区切り線
+        st.markdown("---")
+        
+        # WEB UI個別入力
+        st.subheader("📝 WEB UI個別入力")
+        
+        with st.form("media_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                media_name = st.text_input("メディア名*", placeholder="例: Meta広告")
+                reachable_count = st.number_input("リーチ可能数", min_value=0, value=0)
+                target_industry = st.text_input("ターゲット業界", placeholder="例: IT・ソフトウェア")
+                target_job_title = st.text_input("ターゲット職種", placeholder="例: エンジニア")
+            
+            with col2:
+                target_company_size = st.text_input("ターゲット企業規模", placeholder="例: すべて")
+                cost_excluding_tax = st.number_input("費用（税抜）", min_value=0, value=0)
+                media_type = st.selectbox("メディアタイプ", ["Web広告", "メルマガ", "メディア掲載", "イベント", "その他"])
+                description = st.text_area("説明", placeholder="メディアの詳細説明")
+            
+            contact_info = st.text_input("連絡先情報", placeholder="例: contact@example.com")
+            
+            submitted = st.form_submit_button("データを追加")
+            
+            if submitted and media_name:
+                media_data = {
+                    'media_name': media_name,
+                    'reachable_count': reachable_count,
+                    'target_industry': target_industry,
+                    'target_job_title': target_job_title,
+                    'target_company_size': target_company_size,
+                    'cost_excluding_tax': cost_excluding_tax,
+                    'media_type': media_type,
+                    'description': description,
+                    'contact_info': contact_info
+                }
+                
+                result = import_system.add_paid_media_data(media_data)
+                
+                if result["success"]:
+                    st.success(result["message"])
+                    st.rerun()
+                else:
+                    st.error(result["error"])
+            elif submitted:
+                st.error("必須項目（メディア名）を入力してください")
     
     # タブ4: 知見データ
     with tab4:
         st.header("🧠 知見データの入力")
         
-        # 入力方法の選択
-        input_method = st.radio(
-            "データ入力方法を選択",
-            ["テキスト形式一括入力", "WEB UI個別入力"],
-            key="knowledge_input_method"
+        # テキスト形式一括入力
+        st.subheader("📝 テキスト形式一括入力")
+        st.markdown("**入力形式:** 複数の知見を改行で区切って入力してください")
+        
+        bulk_text = st.text_area(
+            "知見データ（1行1件）",
+            height=200,
+            placeholder="例:\nFCメルマガは開封率が高く、コンバージョン率も良い\nMeta広告は予算をかければリーチ数を増やせる\nTechPlayは技術者向けイベントで効果的"
         )
         
-        if input_method == "テキスト形式一括入力":
-            st.subheader("📝 テキスト形式一括入力")
-            st.markdown("**入力形式:** 複数の知見を改行で区切って入力してください")
-            
-            bulk_text = st.text_area(
-                "知見データ（1行1件）",
-                height=200,
-                placeholder="例:\nFCメルマガは開封率が高く、コンバージョン率も良い\nMeta広告は予算をかければリーチ数を増やせる\nTechPlayは技術者向けイベントで効果的"
-            )
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                knowledge_type = st.selectbox("知見タイプ（一括適用）", ["general", "campaign", "media", "audience", "timing"])
-                impact_degree = st.slider("影響度（一括適用）", 0.0, 5.0, 1.0, 0.1)
-            with col2:
-                impact_frequency = st.selectbox("影響頻度（一括適用）", ["常時", "頻繁", "時々", "稀"])
-                confidence_score = st.slider("信頼度（一括適用）", 0.0, 1.0, 0.8, 0.1)
-            
-            if st.button("一括追加実行", key="bulk_knowledge"):
-                if bulk_text.strip():
-                    with st.spinner("知見データを追加中..."):
-                        lines = [line.strip() for line in bulk_text.split('\n') if line.strip()]
-                        success_count = 0
-                        
-                        for i, line in enumerate(lines, 1):
-                            knowledge_data = {
-                                'title': f"知見 {i}",
-                                'content': line,
-                                'knowledge_type': knowledge_type,
-                                'impact_degree': impact_degree,
-                                'impact_scope': None,
-                                'impact_frequency': impact_frequency,
-                                'applicable_conditions': None,
-                                'tags': None,
-                                'source': "一括入力",
-                                'confidence_score': confidence_score
-                            }
-                            
-                            result = import_system.add_knowledge_data(knowledge_data)
-                            if result["success"]:
-                                success_count += 1
-                        
-                        st.success(f"✅ {success_count}件の知見データを追加しました")
-                        st.rerun()
-                else:
-                    st.error("知見データを入力してください")
+        col1, col2 = st.columns(2)
+        with col1:
+            knowledge_type = st.selectbox("知見タイプ（一括適用）", ["general", "campaign", "media", "audience", "timing"])
+            impact_degree = st.slider("影響度（一括適用）", 0.0, 5.0, 1.0, 0.1)
+        with col2:
+            impact_frequency = st.selectbox("影響頻度（一括適用）", ["常時", "頻繁", "時々", "稀"])
+            confidence_score = st.slider("信頼度（一括適用）", 0.0, 1.0, 0.8, 0.1)
         
-        else:  # WEB UI個別入力
-            st.subheader("📝 WEB UI個別入力")
+        if st.button("一括追加実行", key="bulk_knowledge"):
+            if bulk_text.strip():
+                with st.spinner("知見データを追加中..."):
+                    lines = [line.strip() for line in bulk_text.split('\n') if line.strip()]
+                    success_count = 0
+                    
+                    for i, line in enumerate(lines, 1):
+                        knowledge_data = {
+                            'title': f"知見 {i}",
+                            'content': line,
+                            'knowledge_type': knowledge_type,
+                            'impact_degree': impact_degree,
+                            'impact_scope': None,
+                            'impact_frequency': impact_frequency,
+                            'applicable_conditions': None,
+                            'tags': None,
+                            'source': "一括入力",
+                            'confidence_score': confidence_score
+                        }
+                        
+                        result = import_system.add_knowledge_data(knowledge_data)
+                        if result["success"]:
+                            success_count += 1
+                    
+                    st.success(f"✅ {success_count}件の知見データを追加しました")
+                    st.rerun()
+            else:
+                st.error("知見データを入力してください")
+        
+        # 区切り線
+        st.markdown("---")
+        
+        # WEB UI個別入力
+        st.subheader("📝 WEB UI個別入力")
+        
+        with st.form("knowledge_form"):
+            col1, col2 = st.columns(2)
             
-            with st.form("knowledge_form"):
-                col1, col2 = st.columns(2)
+            with col1:
+                title = st.text_input("タイトル*", placeholder="例: FCメルマガの効果")
+                knowledge_type_form = st.selectbox("知見タイプ", ["general", "campaign", "media", "audience", "timing"])
+                impact_degree_form = st.slider("影響度", 0.0, 5.0, 1.0, 0.1)
+                impact_scope = st.text_input("影響範囲", placeholder="例: IT業界全般")
+            
+            with col2:
+                impact_frequency_form = st.selectbox("影響頻度", ["常時", "頻繁", "時々", "稀"])
+                applicable_conditions = st.text_area("適用条件", placeholder="例: 技術者向けイベントの場合")
+                tags = st.text_input("タグ（カンマ区切り）", placeholder="例: メルマガ,コンバージョン,効果")
+                source = st.text_input("情報源", placeholder="例: 過去実績分析")
+            
+            content = st.text_area("内容*", height=150, placeholder="知見の詳細内容を入力してください")
+            confidence_score_form = st.slider("信頼度", 0.0, 1.0, 0.8, 0.1)
+            
+            submitted = st.form_submit_button("データを追加")
+            
+            if submitted and title and content:
+                knowledge_data = {
+                    'title': title,
+                    'content': content,
+                    'knowledge_type': knowledge_type_form,
+                    'impact_degree': impact_degree_form,
+                    'impact_scope': impact_scope,
+                    'impact_frequency': impact_frequency_form,
+                    'applicable_conditions': applicable_conditions,
+                    'tags': tags,
+                    'source': source,
+                    'confidence_score': confidence_score_form
+                }
                 
-                with col1:
-                    title = st.text_input("タイトル*", placeholder="例: FCメルマガの効果")
-                    knowledge_type = st.selectbox("知見タイプ", ["general", "campaign", "media", "audience", "timing"])
-                    impact_degree = st.slider("影響度", 0.0, 5.0, 1.0, 0.1)
-                    impact_scope = st.text_input("影響範囲", placeholder="例: IT業界全般")
+                result = import_system.add_knowledge_data(knowledge_data)
                 
-                with col2:
-                    impact_frequency = st.selectbox("影響頻度", ["常時", "頻繁", "時々", "稀"])
-                    applicable_conditions = st.text_area("適用条件", placeholder="例: 技術者向けイベントの場合")
-                    tags = st.text_input("タグ（カンマ区切り）", placeholder="例: メルマガ,コンバージョン,効果")
-                    source = st.text_input("情報源", placeholder="例: 過去実績分析")
-                
-                content = st.text_area("内容*", height=150, placeholder="知見の詳細内容を入力してください")
-                confidence_score = st.slider("信頼度", 0.0, 1.0, 0.8, 0.1)
-                
-                submitted = st.form_submit_button("データを追加")
-                
-                if submitted and title and content:
-                    knowledge_data = {
-                        'title': title,
-                        'content': content,
-                        'knowledge_type': knowledge_type,
-                        'impact_degree': impact_degree,
-                        'impact_scope': impact_scope,
-                        'impact_frequency': impact_frequency,
-                        'applicable_conditions': applicable_conditions,
-                        'tags': tags,
-                        'source': source,
-                        'confidence_score': confidence_score
-                    }
-                    
-                    result = import_system.add_knowledge_data(knowledge_data)
-                    
-                    if result["success"]:
-                        st.success(result["message"])
-                        st.rerun()
-                    else:
-                        st.error(result["error"])
-                elif submitted:
-                    st.error("必須項目（タイトル、内容）を入力してください")
+                if result["success"]:
+                    st.success(result["message"])
+                    st.rerun()
+                else:
+                    st.error(result["error"])
+            elif submitted:
+                st.error("必須項目（タイトル、内容）を入力してください")
 
 if __name__ == "__main__":
     main() 
