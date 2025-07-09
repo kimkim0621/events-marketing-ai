@@ -157,21 +157,113 @@ def main():
     
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
-    # サイドバーで列幅の調整
-    with st.sidebar:
-        st.markdown("### ⚙️ レイアウト設定")
-        col_ratio = st.slider(
-            "左右の列幅比率",
-            min_value=0.2,
-            max_value=0.8,
-            value=0.5,
-            step=0.1,
-            help="左の列の幅を調整します。0.5が同じ幅です。"
-        )
-        st.markdown("---")
+    # リサイズ可能な2列レイアウト用のCSS/JavaScript
+    st.markdown("""
+    <style>
+    .resizable-container {
+        display: flex;
+        height: 100vh;
+        width: 100%;
+    }
+    .resizable-left {
+        flex: 0 0 50%;
+        padding: 1rem;
+        overflow-y: auto;
+        border-right: 1px solid #e0e0e0;
+    }
+    .resizable-right {
+        flex: 1;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+    .resize-handle {
+        width: 5px;
+        background: #e0e0e0;
+        cursor: col-resize;
+        position: relative;
+        transition: background-color 0.2s;
+    }
+    .resize-handle:hover {
+        background: #1f77b4;
+    }
+    .resize-handle::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 3px;
+        height: 30px;
+        background: #ccc;
+        border-radius: 2px;
+    }
+    </style>
     
-    # 2列レイアウト（動的な幅調整）
-    col1, col2 = st.columns([col_ratio, 1-col_ratio])
+    <script>
+    function makeResizable() {
+        const container = document.querySelector('.resizable-container');
+        const leftPanel = document.querySelector('.resizable-left');
+        const rightPanel = document.querySelector('.resizable-right');
+        const handle = document.querySelector('.resize-handle');
+        
+        if (!container || !leftPanel || !rightPanel || !handle) return;
+        
+        let isResizing = false;
+        
+        handle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const containerRect = container.getBoundingClientRect();
+            const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            
+            if (newLeftWidth >= 20 && newLeftWidth <= 80) {
+                leftPanel.style.flex = `0 0 ${newLeftWidth}%`;
+                rightPanel.style.flex = '1';
+            }
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        });
+    }
+    
+    // DOM読み込み後に実行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', makeResizable);
+    } else {
+        makeResizable();
+    }
+    
+    // Streamlitの再レンダリング後にも実行
+    setTimeout(makeResizable, 100);
+    </script>
+    """, unsafe_allow_html=True)
+    
+    # HTML構造でリサイズ可能なレイアウトを作成
+    st.markdown("""
+    <div class="resizable-container">
+        <div class="resizable-left" id="left-panel">
+            <h2>📝 施策提案のための情報入力</h2>
+            <div id="left-content"></div>
+        </div>
+        <div class="resize-handle"></div>
+        <div class="resizable-right" id="right-panel">
+            <h2>📊 データ管理</h2>
+            <div id="right-content"></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 通常のStreamlitコンテンツ（フォールバック）
+    col1, col2 = st.columns([1, 1])
     
     with col1:
         st.markdown("## 📝 施策提案のための情報入力")
