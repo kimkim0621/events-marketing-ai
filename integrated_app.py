@@ -25,7 +25,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# カスタムCSS
+# 基本CSS
 st.markdown("""
 <style>
     .main-header {
@@ -76,23 +76,6 @@ st.markdown("""
         border: 1px solid #e9ecef;
         margin-bottom: 1rem;
     }
-    
-    /* カラムの境界線とスタイリング */
-    .column-left {
-        border-right: 2px solid #e9ecef;
-        padding-right: 1rem;
-    }
-    .column-right {
-        padding-left: 1rem;
-    }
-    
-    /* レスポンシブデザイン */
-    @media (max-width: 768px) {
-        .column-left, .column-right {
-            border: none;
-            padding: 0.5rem;
-        }
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -100,35 +83,188 @@ def main():
     """メインアプリケーション"""
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
+    # 列幅の初期化
+    if 'column_width' not in st.session_state:
+        st.session_state.column_width = 50
+    
+    # カスタムCSS
+    st.markdown("""
+    <style>
+    .resize-info {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: rgba(31, 119, 180, 0.9);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .column-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(to right, #e0e0e0, #bbb, #e0e0e0);
+        height: 100%;
+        min-height: 600px;
+        width: 20px;
+        position: relative;
+        margin: 0 -10px;
+        z-index: 100;
+        cursor: col-resize;
+        user-select: none;
+        transition: all 0.2s ease;
+    }
+    
+    .column-divider:hover {
+        background: linear-gradient(to right, #1f77b4, #3498db, #1f77b4);
+        width: 25px;
+        box-shadow: 0 0 10px rgba(31, 119, 180, 0.3);
+    }
+    
+    .column-divider::before {
+        content: '⋮⋮⋮';
+        color: #666;
+        font-size: 16px;
+        line-height: 8px;
+        letter-spacing: -2px;
+        writing-mode: vertical-lr;
+        text-orientation: mixed;
+    }
+    
+    .column-divider:hover::before {
+        color: white;
+    }
+    
+    .resize-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .resize-button {
+        background: #1f77b4;
+        color: white;
+        border: none;
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: background 0.2s;
+    }
+    
+    .resize-button:hover {
+        background: #1558a0;
+    }
+    
+    .column-left-custom {
+        background: #f8f9fa;
+        border-right: 2px solid #e9ecef;
+        padding: 1rem;
+        min-height: 600px;
+        position: relative;
+    }
+    
+    .column-right-custom {
+        background: #ffffff;
+        padding: 1rem;
+        min-height: 600px;
+    }
+    
+    /* レスポンシブ対応 */
+    @media (max-width: 768px) {
+        .column-divider {
+            display: none;
+        }
+        .resize-controls {
+            flex-direction: column;
+            gap: 5px;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # 列幅情報を表示
+    st.markdown(f"""
+    <div class="resize-info">
+        列幅: {st.session_state.column_width}% | {100-st.session_state.column_width}%
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # リサイズコントロール
+    st.markdown('<div class="resize-controls">', unsafe_allow_html=True)
+    col_ctrl1, col_ctrl2, col_ctrl3, col_ctrl4, col_ctrl5 = st.columns([1, 1, 1, 1, 1])
+    
+    with col_ctrl1:
+        if st.button("◀◀ 20%", key="width_20", help="左列を20%に設定"):
+            st.session_state.column_width = 20
+            st.rerun()
+    
+    with col_ctrl2:
+        if st.button("◀ 35%", key="width_35", help="左列を35%に設定"):
+            st.session_state.column_width = 35
+            st.rerun()
+    
+    with col_ctrl3:
+        if st.button("⚖ 50%", key="width_50", help="左列を50%に設定"):
+            st.session_state.column_width = 50
+            st.rerun()
+    
+    with col_ctrl4:
+        if st.button("65% ▶", key="width_65", help="左列を65%に設定"):
+            st.session_state.column_width = 65
+            st.rerun()
+    
+    with col_ctrl5:
+        if st.button("80% ▶▶", key="width_80", help="左列を80%に設定"):
+            st.session_state.column_width = 80
+            st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 細かい調整用スライダー
+    new_width = st.slider(
+        "🎚️ 細かい調整",
+        min_value=20,
+        max_value=80,
+        value=st.session_state.column_width,
+        step=1,
+        help="左列の幅を1%単位で調整"
+    )
+    
+    if new_width != st.session_state.column_width:
+        st.session_state.column_width = new_width
+        st.rerun()
+    
     # データインポートシステムの初期化
     import_system = DataImportSystem()
     
-    # 列幅比率を選択するサイドバー
-    with st.sidebar:
-        st.header("⚙️ レイアウト設定")
-        left_width = st.slider(
-            "左列の幅 (%)",
-            min_value=20,
-            max_value=80,
-            value=50,
-            step=5,
-            help="左列（施策提案）の幅を調整できます"
-        )
-        right_width = 100 - left_width
-        
-        st.info(f"左列: {left_width}% | 右列: {right_width}%")
+    # 動的列幅でレイアウト作成
+    left_width = st.session_state.column_width
+    right_width = 100 - left_width
     
-    # 2列レイアウトの作成
-    col1, col2 = st.columns([left_width, right_width])
+    # 3列レイアウト（左コンテンツ、境界線、右コンテンツ）
+    col1, col_divider, col2 = st.columns([left_width, 2, right_width])
     
     with col1:
-        st.markdown('<div class="column-left">', unsafe_allow_html=True)
+        st.markdown('<div class="column-left-custom">', unsafe_allow_html=True)
         st.markdown("### 📝 施策提案のための情報入力")
         show_proposal_input()
         st.markdown('</div>', unsafe_allow_html=True)
     
+    with col_divider:
+        st.markdown('<div class="column-divider" title="クリックまたはボタンで列幅を調整"></div>', unsafe_allow_html=True)
+    
     with col2:
-        st.markdown('<div class="column-right">', unsafe_allow_html=True)
+        st.markdown('<div class="column-right-custom">', unsafe_allow_html=True)
         st.markdown("### 📊 データインポート")
         show_data_import_interface(import_system)
         st.markdown('</div>', unsafe_allow_html=True)
