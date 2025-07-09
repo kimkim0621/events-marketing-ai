@@ -204,3 +204,14 @@ def setup_shared_database():
             return None
     except Exception:
         return None 
+    """共有データベースをセットアップ"""
+    db = SharedDatabase()
+    if db.connect():
+        if db.create_tables():
+            st.success("✅ 共有データベースの準備完了！")
+            return db
+        else:
+            st.error("❌ テーブル作成に失敗しました")
+    else:
+        st.error("❌ データベース接続に失敗しました")
+    return None 
