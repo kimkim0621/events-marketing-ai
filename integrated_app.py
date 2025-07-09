@@ -33,76 +33,89 @@ st.set_page_config(
 # 基本CSS - 最も確実な方法で上部余白を削除
 st.markdown("""
 <style>
-    /* 全体のリセット */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+    /* 最も強力なリセット - 全ての要素 */
+    *, *::before, *::after {
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
     }
     
-    /* Streamlitの基本構造をリセット */
-    .stApp {
+    /* HTML全体のリセット */
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+    }
+    
+    /* Streamlitのルート要素を強制リセット */
+    #root, .stApp, .main, .block-container {
+        margin: 0 !important;
+        padding: 0 !important;
         top: 0 !important;
-        margin-top: 0 !important;
-        padding-top: 0 !important;
+        position: relative !important;
     }
     
-    /* メインコンテナの余白を完全削除 */
+    /* 特定の上部余白を生成する要素を削除 */
     .main .block-container {
         padding-top: 0 !important;
         padding-bottom: 0 !important;
         padding-left: 1rem !important;
         padding-right: 1rem !important;
         margin-top: 0 !important;
+        margin-bottom: 0 !important;
         max-width: 100% !important;
+        top: 0 !important;
     }
     
-    /* ヘッダー関連を全て削除 */
-    header[data-testid="stHeader"] {
+    /* 全てのヘッダー関連要素を完全削除 */
+    header, 
+    header[data-testid="stHeader"],
+    div[data-testid="stToolbar"],
+    div[data-testid="stDecoration"],
+    .stApp > header,
+    .stApp > div[data-testid="stHeader"] {
         display: none !important;
         height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: absolute !important;
+        top: -9999px !important;
     }
     
-    div[data-testid="stToolbar"] {
-        display: none !important;
-    }
-    
-    .stApp > header {
-        display: none !important;
-    }
-    
-    /* デコレーション要素を削除 */
-    div[data-testid="stDecoration"] {
-        display: none !important;
-    }
-    
-    /* 最初の要素の余白を強制削除 */
-    .main > div:first-child,
-    .block-container > div:first-child,
-    .element-container:first-child {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-    
-    /* 全てのStreamlit要素の上部余白を削除 */
-    .stMarkdown:first-child,
+    /* 最初の子要素の余白を強制削除 */
+    .main > *:first-child,
+    .block-container > *:first-child,
     .element-container:first-child,
+    .stMarkdown:first-child,
     div[data-testid="element-container"]:first-child {
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
     
-    /* タイトルを最上部に配置 */
+    /* 全てのStreamlit要素の余白を削除 */
+    .stMarkdown, .element-container, .stColumns, .stColumn {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* タイトルを最上部に強制配置 */
     .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
+        font-size: 2.5rem !important;
+        font-weight: bold !important;
+        color: #1f77b4 !important;
+        text-align: center !important;
         margin: 0 !important;
         padding: 0 !important;
         margin-bottom: 1rem !important;
-        position: relative;
-        top: 0;
+        position: relative !important;
+        top: 0 !important;
+        z-index: 1000 !important;
+    }
+    
+    /* 可能性のあるStreamlitの内部クラスを上書き */
+    .css-1d391kg, .css-18e3th9, .css-1dp5vir, .css-1y4p8pa, .css-12oz5g7 {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
     }
     
     /* その他のスタイル */
@@ -152,51 +165,119 @@ st.markdown("""
 
 def main():
     """メインアプリケーション"""
-    # JavaScriptで確実に上部余白を削除
+    # 最も強力なJavaScriptで確実に上部余白を削除
     st.markdown("""
     <script>
-    function removeTopMargin() {
-        // 全ての可能な上部余白要素を削除
-        const elements = [
-            '.main',
-            '.block-container',
-            '.element-container',
-            '.stApp',
-            'header[data-testid="stHeader"]',
-            'div[data-testid="stToolbar"]',
-            '.stMarkdown:first-child'
-        ];
-        
-        elements.forEach(selector => {
-            const els = document.querySelectorAll(selector);
-            els.forEach(el => {
+    function forceRemoveTopMargin() {
+        // 全ての可能な要素を取得して余白を削除
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(el => {
+            // 上部余白・パディングを強制削除
+            if (el.style) {
                 el.style.marginTop = '0';
                 el.style.paddingTop = '0';
+            }
+        });
+        
+        // 特定の要素を対象に強制削除
+        const targetSelectors = [
+            'html', 'body', '#root',
+            '.stApp', '.main', '.block-container', '.element-container',
+            'header', 'header[data-testid="stHeader"]',
+            'div[data-testid="stToolbar"]', 'div[data-testid="stDecoration"]',
+            '.stMarkdown', '.stColumns', '.stColumn'
+        ];
+        
+        targetSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+                if (el.style) {
+                    el.style.marginTop = '0';
+                    el.style.paddingTop = '0';
+                    el.style.top = '0';
+                }
+                
+                // ヘッダー要素は完全に非表示
+                if (selector.includes('header') || selector.includes('stHeader') || selector.includes('stToolbar')) {
+                    el.style.display = 'none';
+                    el.style.height = '0';
+                    el.style.position = 'absolute';
+                    el.style.top = '-9999px';
+                }
             });
         });
         
         // 最初の子要素の余白を削除
-        const firstElements = document.querySelectorAll('.main > div:first-child, .block-container > div:first-child');
-        firstElements.forEach(el => {
-            el.style.marginTop = '0';
-            el.style.paddingTop = '0';
+        const firstChildSelectors = [
+            '.main > *:first-child',
+            '.block-container > *:first-child',
+            '.element-container:first-child',
+            '.stMarkdown:first-child'
+        ];
+        
+        firstChildSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+                if (el.style) {
+                    el.style.marginTop = '0';
+                    el.style.paddingTop = '0';
+                }
+            });
         });
         
-        // ヘッダーを非表示
-        const headers = document.querySelectorAll('header[data-testid="stHeader"]');
-        headers.forEach(header => {
-            header.style.display = 'none';
-        });
+        // body要素を最上部に配置
+        if (document.body) {
+            document.body.style.marginTop = '0';
+            document.body.style.paddingTop = '0';
+        }
+        
+        // html要素を最上部に配置
+        if (document.documentElement) {
+            document.documentElement.style.marginTop = '0';
+            document.documentElement.style.paddingTop = '0';
+        }
     }
     
+    // 即座に実行
+    forceRemoveTopMargin();
+    
     // 複数回実行して確実に適用
-    setTimeout(removeTopMargin, 100);
-    setTimeout(removeTopMargin, 500);
-    setTimeout(removeTopMargin, 1000);
+    setTimeout(forceRemoveTopMargin, 50);
+    setTimeout(forceRemoveTopMargin, 100);
+    setTimeout(forceRemoveTopMargin, 200);
+    setTimeout(forceRemoveTopMargin, 500);
+    setTimeout(forceRemoveTopMargin, 1000);
+    setTimeout(forceRemoveTopMargin, 2000);
     
     // MutationObserverで動的な変更を監視
-    const observer = new MutationObserver(removeTopMargin);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                setTimeout(forceRemoveTopMargin, 10);
+            }
+        });
+    });
+    
+    observer.observe(document.body, { 
+        childList: true, 
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+    });
+    
+    // ページ読み込み完了後にも実行
+    window.addEventListener('load', forceRemoveTopMargin);
+    document.addEventListener('DOMContentLoaded', forceRemoveTopMargin);
+    
+    // 定期的に実行（最初の5秒間）
+    let intervalCount = 0;
+    const interval = setInterval(() => {
+        forceRemoveTopMargin();
+        intervalCount++;
+        if (intervalCount >= 50) { // 5秒後に停止
+            clearInterval(interval);
+        }
+    }, 100);
     </script>
     """, unsafe_allow_html=True)
     
