@@ -681,10 +681,34 @@ def show_media_import(import_system):
             )
             
             target_industry = st.text_input("ターゲット業界", placeholder="例: IT・ソフトウェア", key="target_industry_input")
-            target_job_title = st.text_input("ターゲット職種", placeholder="例: エンジニア", key="target_job_title_input")
+            
+            # 職種選択肢（左列と同じ）
+            job_title_options = [
+                "CTO", "VPoE", "EM", "フロントエンドエンジニア", "インフラエンジニア", 
+                "フルスタックエンジニア", "モバイルエンジニア", "セキュリティエンジニア", 
+                "アプリケーションエンジニア・ソリューションアーキテクト", "データサイエンティスト", 
+                "情報システム", "ネットワークエンジニア", "UXエンジニア", "デザイナー", "学生", 
+                "データアナリスト", "CPO", "VPoT/VPoP", "テックリード", "バックエンドエンジニア", 
+                "SRE", "プロダクトマネージャー", "DevOpsエンジニア", "QAエンジニア", "機械学習エンジニア", 
+                "プロジェクトマネージャー", "SIer", "ゲーム開発エンジニア", "組み込みエンジニア", 
+                "エンジニア以外", "データエンジニア"
+            ]
+            
+            target_job_title = st.selectbox(
+                "ターゲット職種",
+                [""] + job_title_options,  # 空の選択肢を最初に追加
+                key="target_job_title_input"
+            )
         
         # 詳細情報
-        target_company_size = st.text_input("ターゲット企業規模", placeholder="例: 101-1000名", key="target_company_size_input")
+        # 企業規模選択肢（左列と同じ）
+        company_size_options = ["10名以下", "11名～50名", "51名～100名", "101名～300名", "301名～500名", "501名～1,000名", "1,001～5,000名", "5,001名以上"]
+        
+        target_company_size = st.selectbox(
+            "ターゲット企業規模",
+            [""] + company_size_options,  # 空の選択肢を最初に追加
+            key="target_company_size_input"
+        )
         description = st.text_area("説明", placeholder="例: Facebook・Instagram広告による集客", key="description_input")
         contact_info = st.text_input("連絡先情報", placeholder="例: meta-ads@example.com", key="contact_info_input")
         
@@ -694,8 +718,8 @@ def show_media_import(import_system):
                     'media_name': media_name.strip(),
                     'reachable_count': reachable_count,
                     'target_industry': target_industry.strip() if target_industry.strip() else None,
-                    'target_job_title': target_job_title.strip() if target_job_title.strip() else None,
-                    'target_company_size': target_company_size.strip() if target_company_size.strip() else None,
+                    'target_job_title': target_job_title if target_job_title else None,
+                    'target_company_size': target_company_size if target_company_size else None,
                     'cost_excluding_tax': cost_excluding_tax,
                     'media_type': media_type,
                     'description': description.strip() if description.strip() else None,
