@@ -27,105 +27,105 @@ st.set_page_config(
     page_title="イベント集客施策提案AI",
     page_icon="🎯",
     layout="wide",
-    initial_sidebar_state="collapsed"  # サイドバーを折りたたみ
+    initial_sidebar_state="collapsed"
 )
 
-# 基本CSS - 最も確実な方法で上部余白を削除
+# カスタムCSS - 上部余白を完全に削除
 st.markdown("""
 <style>
-    /* 最も強力なリセット - 全ての要素 */
-    *, *::before, *::after {
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
+    /* Streamlitのデフォルト設定を完全に上書き */
+    .stApp > header {
+        display: none !important;
     }
     
-    /* HTML全体のリセット */
-    html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        height: 100% !important;
-    }
-    
-    /* Streamlitのルート要素を強制リセット */
-    #root, .stApp, .main, .block-container {
-        margin: 0 !important;
-        padding: 0 !important;
-        top: 0 !important;
-        position: relative !important;
-    }
-    
-    /* 特定の上部余白を生成する要素を削除 */
-    .main .block-container {
+    .main > .block-container {
         padding-top: 0 !important;
         padding-bottom: 0 !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
         max-width: 100% !important;
-        top: 0 !important;
     }
     
-    /* 全てのヘッダー関連要素を完全削除 */
-    header, 
-    header[data-testid="stHeader"],
-    div[data-testid="stToolbar"],
-    div[data-testid="stDecoration"],
-    .stApp > header,
-    .stApp > div[data-testid="stHeader"] {
-        display: none !important;
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        position: absolute !important;
-        top: -9999px !important;
+    /* iframeの場合の対策 */
+    iframe {
+        display: block;
     }
     
-    /* 最初の子要素の余白を強制削除 */
-    .main > *:first-child,
-    .block-container > *:first-child,
-    .element-container:first-child,
-    .stMarkdown:first-child,
-    div[data-testid="element-container"]:first-child {
+    /* 最初の要素の余白を削除 */
+    .element-container:first-of-type {
         margin-top: 0 !important;
         padding-top: 0 !important;
     }
     
-    /* 全てのStreamlit要素の余白を削除 */
-    .stMarkdown, .element-container, .stColumns, .stColumn {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-    
-    /* タイトルを最上部に強制配置 */
+    /* タイトルのスタイル */
     .main-header {
-        font-size: 2.5rem !important;
+        font-size: 2rem !important;
         font-weight: bold !important;
         color: #1f77b4 !important;
         text-align: center !important;
         margin: 0 !important;
-        padding: 0 !important;
-        margin-bottom: 1rem !important;
-        position: relative !important;
-        top: 0 !important;
-        z-index: 1000 !important;
+        padding: 1rem 0 !important;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
     }
     
-    /* 可能性のあるStreamlitの内部クラスを上書き */
-    .css-1d391kg, .css-18e3th9, .css-1dp5vir, .css-1y4p8pa, .css-12oz5g7 {
-        padding-top: 0 !important;
-        margin-top: 0 !important;
+    /* 列のスタイル */
+    .column-panel {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        background: #ffffff;
+        height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+    
+    .column-panel-left {
+        border-radius: 8px 0 0 8px;
+    }
+    
+    .column-panel-right {
+        border-radius: 0 8px 8px 0;
+        border-left: none;
+    }
+    
+    /* ドラッグハンドル */
+    .drag-handle {
+        position: absolute;
+        width: 4px;
+        height: 100%;
+        background: #e9ecef;
+        cursor: col-resize;
+        right: -2px;
+        top: 0;
+        transition: all 0.2s ease;
+    }
+    
+    .drag-handle:hover {
+        background: #1f77b4;
+        width: 8px;
+        right: -4px;
+    }
+    
+    /* タブのスタイル */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        padding: 0.5rem 1rem;
+        background-color: white;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #1f77b4;
+        color: white;
+        border-color: #1f77b4;
     }
     
     /* その他のスタイル */
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-    }
     .metric-card {
         background-color: #f8f9fa;
         padding: 1rem;
@@ -133,6 +133,7 @@ st.markdown("""
         border-left: 4px solid #1f77b4;
         margin-bottom: 1rem;
     }
+    
     .campaign-card {
         background-color: #ffffff;
         padding: 1.5rem;
@@ -141,338 +142,178 @@ st.markdown("""
         margin-bottom: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    
     .free-campaign {
         border-left: 4px solid #28a745;
     }
+    
     .paid-campaign {
         border-left: 4px solid #ffc107;
     }
-    .input-section {
-        background-color: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    .recommendation-section {
-        background-color: #ffffff;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e9ecef;
-        margin-bottom: 1rem;
-    }
 </style>
+
+<script>
+function setupColumnResize() {
+    // Streamlitの列要素を取得
+    const columns = document.querySelectorAll('[data-testid="column"]');
+    if (columns.length < 2) {
+        setTimeout(setupColumnResize, 100);
+        return;
+    }
+    
+    const col1 = columns[0];
+    const col2 = columns[1];
+    const container = col1.parentElement;
+    
+    // 既存のハンドルを削除
+    const existingHandle = document.querySelector('.column-resize-handle');
+    if (existingHandle) {
+        existingHandle.remove();
+    }
+    
+    // リサイズハンドルを作成
+    const handle = document.createElement('div');
+    handle.className = 'column-resize-handle';
+    handle.style.cssText = `
+        position: absolute;
+        width: 4px;
+        height: 100%;
+        background: #e9ecef;
+        cursor: col-resize;
+        z-index: 1000;
+        transition: all 0.2s ease;
+    `;
+    
+    // ハンドルにホバー効果を追加
+    handle.onmouseenter = () => {
+        handle.style.background = '#1f77b4';
+        handle.style.width = '8px';
+    };
+    
+    handle.onmouseleave = () => {
+        if (!isResizing) {
+            handle.style.background = '#e9ecef';
+            handle.style.width = '4px';
+        }
+    };
+    
+    container.style.position = 'relative';
+    container.appendChild(handle);
+    
+    let isResizing = false;
+    let startX = 0;
+    let startCol1Width = 0;
+    let startCol2Width = 0;
+    
+    // ハンドルの位置を更新
+    function updateHandlePosition() {
+        const col1Rect = col1.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        handle.style.left = (col1Rect.right - containerRect.left - 2) + 'px';
+        handle.style.height = containerRect.height + 'px';
+    }
+    
+    updateHandlePosition();
+    
+    handle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startCol1Width = col1.offsetWidth;
+        startCol2Width = col2.offsetWidth;
+        
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        
+        e.preventDefault();
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        
+        const deltaX = e.clientX - startX;
+        const totalWidth = startCol1Width + startCol2Width;
+        const newCol1Width = startCol1Width + deltaX;
+        const col1Percent = (newCol1Width / totalWidth) * 100;
+        
+        // 最小・最大幅の制限（20%〜80%）
+        if (col1Percent >= 20 && col1Percent <= 80) {
+            col1.style.flex = `0 0 ${col1Percent}%`;
+            col2.style.flex = `0 0 ${100 - col1Percent}%`;
+            updateHandlePosition();
+        }
+    });
+    
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            handle.style.background = '#e9ecef';
+            handle.style.width = '4px';
+        }
+    });
+    
+    // ウィンドウリサイズ時にハンドル位置を更新
+    window.addEventListener('resize', updateHandlePosition);
+}
+
+// DOM読み込み後に実行
+setTimeout(setupColumnResize, 100);
+setTimeout(setupColumnResize, 500);
+setTimeout(setupColumnResize, 1000);
+
+// MutationObserverで動的な変更を監視
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.type === 'childList') {
+            setTimeout(setupColumnResize, 100);
+        }
+    });
+});
+
+if (document.body) {
+    observer.observe(document.body, { 
+        childList: true, 
+        subtree: true
+    });
+}
+</script>
 """, unsafe_allow_html=True)
 
 def main():
     """メインアプリケーション"""
-    # 最も強力なJavaScriptで確実に上部余白を削除
-    st.markdown("""
-    <script>
-    function forceRemoveTopMargin() {
-        // 全ての可能な要素を取得して余白を削除
-        const allElements = document.querySelectorAll('*');
-        allElements.forEach(el => {
-            // 上部余白・パディングを強制削除
-            if (el.style) {
-                el.style.marginTop = '0';
-                el.style.paddingTop = '0';
-            }
-        });
-        
-        // 特定の要素を対象に強制削除
-        const targetSelectors = [
-            'html', 'body', '#root',
-            '.stApp', '.main', '.block-container', '.element-container',
-            'header', 'header[data-testid="stHeader"]',
-            'div[data-testid="stToolbar"]', 'div[data-testid="stDecoration"]',
-            '.stMarkdown', '.stColumns', '.stColumn'
-        ];
-        
-        targetSelectors.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(el => {
-                if (el.style) {
-                    el.style.marginTop = '0';
-                    el.style.paddingTop = '0';
-                    el.style.top = '0';
-                }
-                
-                // ヘッダー要素は完全に非表示
-                if (selector.includes('header') || selector.includes('stHeader') || selector.includes('stToolbar')) {
-                    el.style.display = 'none';
-                    el.style.height = '0';
-                    el.style.position = 'absolute';
-                    el.style.top = '-9999px';
-                }
-            });
-        });
-        
-        // 最初の子要素の余白を削除
-        const firstChildSelectors = [
-            '.main > *:first-child',
-            '.block-container > *:first-child',
-            '.element-container:first-child',
-            '.stMarkdown:first-child'
-        ];
-        
-        firstChildSelectors.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(el => {
-                if (el.style) {
-                    el.style.marginTop = '0';
-                    el.style.paddingTop = '0';
-                }
-            });
-        });
-        
-        // body要素を最上部に配置
-        if (document.body) {
-            document.body.style.marginTop = '0';
-            document.body.style.paddingTop = '0';
-        }
-        
-        // html要素を最上部に配置
-        if (document.documentElement) {
-            document.documentElement.style.marginTop = '0';
-            document.documentElement.style.paddingTop = '0';
-        }
-    }
-    
-    // 即座に実行
-    forceRemoveTopMargin();
-    
-    // 複数回実行して確実に適用
-    setTimeout(forceRemoveTopMargin, 50);
-    setTimeout(forceRemoveTopMargin, 100);
-    setTimeout(forceRemoveTopMargin, 200);
-    setTimeout(forceRemoveTopMargin, 500);
-    setTimeout(forceRemoveTopMargin, 1000);
-    setTimeout(forceRemoveTopMargin, 2000);
-    
-    // MutationObserverで動的な変更を監視
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList') {
-                setTimeout(forceRemoveTopMargin, 10);
-            }
-        });
-    });
-    
-    observer.observe(document.body, { 
-        childList: true, 
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class']
-    });
-    
-    // ページ読み込み完了後にも実行
-    window.addEventListener('load', forceRemoveTopMargin);
-    document.addEventListener('DOMContentLoaded', forceRemoveTopMargin);
-    
-    // 定期的に実行（最初の5秒間）
-    let intervalCount = 0;
-    const interval = setInterval(() => {
-        forceRemoveTopMargin();
-        intervalCount++;
-        if (intervalCount >= 50) { // 5秒後に停止
-            clearInterval(interval);
-        }
-    }, 100);
-    </script>
-    """, unsafe_allow_html=True)
-    
+    # タイトル
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
-    # リサイズ可能な2列レイアウト用のCSS/JavaScript
-    st.markdown("""
-    <style>
-    .stColumns {
-        gap: 0rem;
-        margin-top: 0 !important;
-    }
-    
-    .column-panel {
-        border: 1px solid #e9ecef;
-        border-radius: 8px;
-        padding: 1rem;
-        background: #f8f9fa;
-        min-height: 600px;
-        position: relative;
-        margin-top: 0 !important;
-    }
-    
-    .column-panel-right {
-        background: #ffffff;
-        border-left: none;
-        border-radius: 0 8px 8px 0;
-    }
-    
-    .column-panel-left {
-        border-radius: 8px 0 0 8px;
-    }
-    
-    .resize-handle {
-        width: 8px;
-        background: #e9ecef;
-        cursor: col-resize;
-        position: absolute;
-        right: -4px;
-        top: 0;
-        bottom: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        user-select: none;
-        z-index: 100;
-    }
-    
-    .resize-handle:hover {
-        background: #1f77b4;
-        width: 12px;
-        right: -6px;
-    }
-    
-    .resize-handle::after {
-        content: '⋮⋮⋮';
-        color: #666;
-        font-size: 12px;
-        line-height: 4px;
-        writing-mode: vertical-lr;
-        text-orientation: mixed;
-        letter-spacing: 2px;
-    }
-    
-    .resize-handle:hover::after {
-        color: white;
-    }
-    
-    /* 全体的な余白を削除 */
-    .element-container {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    .stMarkdown {
-        margin-bottom: 0.5rem;
-        margin-top: 0 !important;
-    }
-    
-    /* 列の余白を削除 */
-    div[data-testid="column"] {
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    
-    div[data-testid="column"] > div {
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-    
-    /* 最初の要素の余白を削除 */
-    div[data-testid="column"] > div:first-child {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-    
-    /* ブロック要素の余白を削除 */
-    .block-container > div:first-child {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-    }
-    </style>
-    
-    <script>
-    function setupResizable() {
-        // Streamlitの列要素を取得
-        const columns = document.querySelectorAll('[data-testid="column"]');
-        if (columns.length < 2) {
-            setTimeout(setupResizable, 100);
-            return;
-        }
-        
-        const leftColumn = columns[0];
-        const rightColumn = columns[1];
-        
-        // 既存のハンドルを削除
-        const existingHandle = leftColumn.querySelector('.resize-handle');
-        if (existingHandle) {
-            existingHandle.remove();
-        }
-        
-        // リサイズハンドルを作成
-        const handle = document.createElement('div');
-        handle.className = 'resize-handle';
-        leftColumn.appendChild(handle);
-        
-        let isResizing = false;
-        let startX = 0;
-        let startLeftWidth = 0;
-        let startRightWidth = 0;
-        
-        handle.addEventListener('mousedown', (e) => {
-            isResizing = true;
-            startX = e.clientX;
-            startLeftWidth = leftColumn.offsetWidth;
-            startRightWidth = rightColumn.offsetWidth;
-            
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-            
-            e.preventDefault();
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (!isResizing) return;
-            
-            const deltaX = e.clientX - startX;
-            const totalWidth = startLeftWidth + startRightWidth;
-            const newLeftWidth = startLeftWidth + deltaX;
-            const newRightWidth = startRightWidth - deltaX;
-            
-            const leftPercent = (newLeftWidth / totalWidth) * 100;
-            const rightPercent = (newRightWidth / totalWidth) * 100;
-            
-            // 最小・最大幅の制限（20%〜80%）
-            if (leftPercent >= 20 && leftPercent <= 80) {
-                leftColumn.style.flex = `0 0 ${leftPercent}%`;
-                rightColumn.style.flex = `0 0 ${rightPercent}%`;
-            }
-        });
-        
-        document.addEventListener('mouseup', () => {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
-            }
-        });
-    }
-    
-    // DOM読み込み後に実行
-    setTimeout(setupResizable, 100);
-    setTimeout(setupResizable, 500);
-    setTimeout(setupResizable, 1000);
-    </script>
-    """, unsafe_allow_html=True)
+    # セッション状態の初期化
+    if 'show_recommendations' not in st.session_state:
+        st.session_state.show_recommendations = False
+    if 'recommendations' not in st.session_state:
+        st.session_state.recommendations = None
     
     # データインポートシステムの初期化
     import_system = DataImportSystem()
     
-    # 通常のStreamlitコンテンツ
+    # 2列レイアウト
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown('<div class="column-panel column-panel-left">', unsafe_allow_html=True)
         st.markdown("### 📝 施策提案のための情報入力")
         show_proposal_input()
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="column-panel column-panel-right">', unsafe_allow_html=True)
-        st.markdown("### 📊 データインポート")
-        show_data_import_interface(import_system)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # タブ切り替えUI
+        if st.session_state.show_recommendations and st.session_state.recommendations:
+            tab1, tab2 = st.tabs(["📊 データインポート", "🎯 施策提案結果"])
+            
+            with tab1:
+                show_data_import_interface(import_system)
+            
+            with tab2:
+                show_recommendations_in_tab(st.session_state.recommendations)
+        else:
+            st.markdown("### 📊 データインポート")
+            show_data_import_interface(import_system)
 
 def show_proposal_input():
     """施策提案のための情報入力フォーム"""
@@ -499,7 +340,7 @@ def show_proposal_input():
     st.markdown("### 🎯 ターゲット設定")
     
     # 業種選択
-    with st.expander("🏢 業種選択 (34業種)", expanded=False):
+    with st.expander("🏢 業種選択", expanded=False):
         # 業種の選択肢（「すべて」を最上段に追加）
         industry_options = [
             "すべて", "輸送用機器", "電気機器", "小売業", "卸売業", "医薬品", "その他製品", "精密機器", 
@@ -544,7 +385,7 @@ def show_proposal_input():
         industries_actual = [ind for ind in industries if ind != "すべて"] if "すべて" not in industries else [ind for ind in industry_options if ind != "すべて"]
     
     # 職種選択
-    with st.expander("👥 職種選択 (31職種)", expanded=False):
+    with st.expander("👥 職種選択", expanded=False):
         # 職種の選択肢（「すべて」を最上段に追加）
         job_title_options = [
             "すべて", "CTO", "VPoE", "EM", "フロントエンドエンジニア", "インフラエンジニア", 
@@ -592,7 +433,7 @@ def show_proposal_input():
         job_titles_actual = [jt for jt in job_titles if jt != "すべて"] if "すべて" not in job_titles else [jt for jt in job_title_options if jt != "すべて"]
     
     # 従業員規模選択
-    with st.expander("📊 従業員規模選択 (8段階)", expanded=False):
+    with st.expander("📊 従業員規模選択", expanded=False):
         # 従業員規模の選択肢（「すべて」を最上段に追加）
         company_size_options = ["すべて", "10名以下", "11名～50名", "51名～100名", "101名～300名", "301名～500名", "501名～1,000名", "1,001～5,000名", "5,001名以上"]
         
@@ -665,8 +506,10 @@ def show_proposal_input():
                     event_date, is_free_event, event_format
                 )
                 
-                # 結果を表示
-                show_recommendations(recommendations)
+                # セッション状態を更新
+                st.session_state.recommendations = recommendations
+                st.session_state.show_recommendations = True
+                st.rerun()
         else:
             st.error("必須項目（イベント名、テーマ、業種、職種）を入力してください")
 
@@ -939,11 +782,8 @@ def generate_recommendations(event_name, event_category, event_theme, industries
     
     return recommendations
 
-def show_recommendations(recommendations):
-    """施策提案結果の表示"""
-    st.markdown("---")
-    st.markdown("## 🎯 施策提案結果")
-    
+def show_recommendations_in_tab(recommendations):
+    """施策提案結果をタブ内に表示"""
     # 概要
     st.markdown("### 📊 概要")
     col1, col2, col3, col4 = st.columns(4)
