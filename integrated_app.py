@@ -76,6 +76,23 @@ st.markdown("""
         border: 1px solid #e9ecef;
         margin-bottom: 1rem;
     }
+    
+    /* カラムの境界線とスタイリング */
+    .column-left {
+        border-right: 2px solid #e9ecef;
+        padding-right: 1rem;
+    }
+    .column-right {
+        padding-left: 1rem;
+    }
+    
+    /* レスポンシブデザイン */
+    @media (max-width: 768px) {
+        .column-left, .column-right {
+            border: none;
+            padding: 0.5rem;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -83,135 +100,38 @@ def main():
     """メインアプリケーション"""
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
-    # リサイズ可能な2列レイアウト用のCSS/JavaScript
-    st.markdown("""
-    <style>
-    .resizable-container {
-        display: flex;
-        height: calc(100vh - 100px);
-        width: 100%;
-        margin-top: 1rem;
-    }
-    .resizable-left {
-        flex: 0 0 50%;
-        padding: 1rem;
-        overflow-y: auto;
-        border-right: 1px solid #e0e0e0;
-        background-color: #f8f9fa;
-    }
-    .resizable-right {
-        flex: 1;
-        padding: 1rem;
-        overflow-y: auto;
-        background-color: #ffffff;
-    }
-    .resize-handle {
-        width: 5px;
-        background: #e0e0e0;
-        cursor: col-resize;
-        position: relative;
-        transition: background-color 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .resize-handle:hover {
-        background: #1f77b4;
-    }
-    .resize-handle::after {
-        content: '⋮⋮';
-        color: #999;
-        font-size: 12px;
-        letter-spacing: -2px;
-    }
-    .resize-handle:hover::after {
-        color: #fff;
-    }
-    
-    /* Streamlitの既存のレイアウトを隠す */
-    .element-container:has(.resizable-container) ~ .element-container {
-        display: none;
-    }
-    </style>
-    
-    <script>
-    function makeResizable() {
-        const container = document.querySelector('.resizable-container');
-        const leftPanel = document.querySelector('.resizable-left');
-        const rightPanel = document.querySelector('.resizable-right');
-        const handle = document.querySelector('.resize-handle');
-        
-        if (!container || !leftPanel || !rightPanel || !handle) return;
-        
-        let isResizing = false;
-        
-        handle.addEventListener('mousedown', (e) => {
-            isResizing = true;
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-            e.preventDefault();
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (!isResizing) return;
-            
-            const containerRect = container.getBoundingClientRect();
-            const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-            
-            if (newLeftWidth >= 20 && newLeftWidth <= 80) {
-                leftPanel.style.flex = `0 0 ${newLeftWidth}%`;
-                rightPanel.style.flex = '1';
-            }
-        });
-        
-        document.addEventListener('mouseup', () => {
-            isResizing = false;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-        });
-    }
-    
-    // DOM読み込み後に実行
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', makeResizable);
-    } else {
-        makeResizable();
-    }
-    
-    // Streamlitの再レンダリング後にも実行
-    setTimeout(makeResizable, 100);
-    setTimeout(makeResizable, 500);
-    </script>
-    """, unsafe_allow_html=True)
-    
     # データインポートシステムの初期化
     import_system = DataImportSystem()
     
-    # HTML構造でリサイズ可能なレイアウトを作成
-    st.markdown("""
-    <div class="resizable-container">
-        <div class="resizable-left" id="left-panel">
-            <h2>📝 施策提案のための情報入力</h2>
-            <div id="left-content"></div>
-        </div>
-        <div class="resize-handle" title="ドラッグして列幅を調整"></div>
-        <div class="resizable-right" id="right-panel">
-            <h2>📊 データインポート</h2>
-            <div id="right-content"></div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # 列幅比率を選択するサイドバー
+    with st.sidebar:
+        st.header("⚙️ レイアウト設定")
+        left_width = st.slider(
+            "左列の幅 (%)",
+            min_value=20,
+            max_value=80,
+            value=50,
+            step=5,
+            help="左列（施策提案）の幅を調整できます"
+        )
+        right_width = 100 - left_width
+        
+        st.info(f"左列: {left_width}% | 右列: {right_width}%")
     
-    # 通常のStreamlitコンテンツ（フォールバック）
-    col1, col2 = st.columns([1, 1])
+    # 2列レイアウトの作成
+    col1, col2 = st.columns([left_width, right_width])
     
     with col1:
-        st.markdown("## 📝 施策提案のための情報入力")
+        st.markdown('<div class="column-left">', unsafe_allow_html=True)
+        st.markdown("### 📝 施策提案のための情報入力")
         show_proposal_input()
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown("## 📊 データインポート")
+        st.markdown('<div class="column-right">', unsafe_allow_html=True)
+        st.markdown("### 📊 データインポート")
         show_data_import_interface(import_system)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 def show_proposal_input():
     """施策提案のための情報入力フォーム"""
@@ -250,24 +170,27 @@ def show_proposal_input():
             
             # 「すべて」選択の処理
             def on_industries_integrated_change():
-                selected = st.session_state.industries_integrated_multiselect
-                if "すべて" in selected and "すべて" not in st.session_state.selected_industries_integrated:
-                    # 「すべて」が新しく選択された場合
-                    st.session_state.selected_industries_integrated = industry_options.copy()
-                elif "すべて" not in selected and "すべて" in st.session_state.selected_industries_integrated:
-                    # 「すべて」が解除された場合
-                    st.session_state.selected_industries_integrated = []
-                elif "すべて" in selected:
-                    # 「すべて」が選択されている状態で他が変更された場合
-                    if len(selected) < len(industry_options):
-                        # 一部解除された場合、「すべて」を除外
-                        st.session_state.selected_industries_integrated = [opt for opt in selected if opt != "すべて"]
-                else:
-                    # 通常の選択
-                    st.session_state.selected_industries_integrated = selected
-                    # 全て選択されている場合、「すべて」を追加
-                    if len(selected) == len(industry_options) - 1:
-                        st.session_state.selected_industries_integrated = ["すべて"] + selected
+                try:
+                    selected = st.session_state.get('industries_integrated_multiselect', [])
+                    if "すべて" in selected and "すべて" not in st.session_state.selected_industries_integrated:
+                        # 「すべて」が新しく選択された場合
+                        st.session_state.selected_industries_integrated = industry_options.copy()
+                    elif "すべて" not in selected and "すべて" in st.session_state.selected_industries_integrated:
+                        # 「すべて」が解除された場合
+                        st.session_state.selected_industries_integrated = []
+                    elif "すべて" in selected:
+                        # 「すべて」が選択されている状態で他が変更された場合
+                        if len(selected) < len(industry_options):
+                            # 一部解除された場合、「すべて」を除外
+                            st.session_state.selected_industries_integrated = [opt for opt in selected if opt != "すべて"]
+                    else:
+                        # 通常の選択
+                        st.session_state.selected_industries_integrated = selected
+                        # 全て選択されている場合、「すべて」を追加
+                        if len(selected) == len(industry_options) - 1:
+                            st.session_state.selected_industries_integrated = ["すべて"] + selected
+                except Exception as e:
+                    st.error(f"業種選択でエラー: {str(e)}")
             
             industries = st.multiselect(
                 "業種",
@@ -291,18 +214,21 @@ def show_proposal_input():
             
             # 「すべて」選択の処理
             def on_job_titles_integrated_change():
-                selected = st.session_state.job_titles_integrated_multiselect
-                if "すべて" in selected and "すべて" not in st.session_state.selected_job_titles_integrated:
-                    st.session_state.selected_job_titles_integrated = job_title_options.copy()
-                elif "すべて" not in selected and "すべて" in st.session_state.selected_job_titles_integrated:
-                    st.session_state.selected_job_titles_integrated = []
-                elif "すべて" in selected:
-                    if len(selected) < len(job_title_options):
-                        st.session_state.selected_job_titles_integrated = [opt for opt in selected if opt != "すべて"]
-                else:
-                    st.session_state.selected_job_titles_integrated = selected
-                    if len(selected) == len(job_title_options) - 1:
-                        st.session_state.selected_job_titles_integrated = ["すべて"] + selected
+                try:
+                    selected = st.session_state.get('job_titles_integrated_multiselect', [])
+                    if "すべて" in selected and "すべて" not in st.session_state.selected_job_titles_integrated:
+                        st.session_state.selected_job_titles_integrated = job_title_options.copy()
+                    elif "すべて" not in selected and "すべて" in st.session_state.selected_job_titles_integrated:
+                        st.session_state.selected_job_titles_integrated = []
+                    elif "すべて" in selected:
+                        if len(selected) < len(job_title_options):
+                            st.session_state.selected_job_titles_integrated = [opt for opt in selected if opt != "すべて"]
+                    else:
+                        st.session_state.selected_job_titles_integrated = selected
+                        if len(selected) == len(job_title_options) - 1:
+                            st.session_state.selected_job_titles_integrated = ["すべて"] + selected
+                except Exception as e:
+                    st.error(f"職種選択でエラー: {str(e)}")
             
             job_titles = st.multiselect(
                 "職種",
@@ -326,18 +252,21 @@ def show_proposal_input():
             
             # 「すべて」選択の処理
             def on_company_sizes_integrated_change():
-                selected = st.session_state.company_sizes_integrated_multiselect
-                if "すべて" in selected and "すべて" not in st.session_state.selected_company_sizes_integrated:
-                    st.session_state.selected_company_sizes_integrated = company_size_options.copy()
-                elif "すべて" not in selected and "すべて" in st.session_state.selected_company_sizes_integrated:
-                    st.session_state.selected_company_sizes_integrated = []
-                elif "すべて" in selected:
-                    if len(selected) < len(company_size_options):
-                        st.session_state.selected_company_sizes_integrated = [opt for opt in selected if opt != "すべて"]
-                else:
-                    st.session_state.selected_company_sizes_integrated = selected
-                    if len(selected) == len(company_size_options) - 1:
-                        st.session_state.selected_company_sizes_integrated = ["すべて"] + selected
+                try:
+                    selected = st.session_state.get('company_sizes_integrated_multiselect', [])
+                    if "すべて" in selected and "すべて" not in st.session_state.selected_company_sizes_integrated:
+                        st.session_state.selected_company_sizes_integrated = company_size_options.copy()
+                    elif "すべて" not in selected and "すべて" in st.session_state.selected_company_sizes_integrated:
+                        st.session_state.selected_company_sizes_integrated = []
+                    elif "すべて" in selected:
+                        if len(selected) < len(company_size_options):
+                            st.session_state.selected_company_sizes_integrated = [opt for opt in selected if opt != "すべて"]
+                    else:
+                        st.session_state.selected_company_sizes_integrated = selected
+                        if len(selected) == len(company_size_options) - 1:
+                            st.session_state.selected_company_sizes_integrated = ["すべて"] + selected
+                except Exception as e:
+                    st.error(f"従業員規模選択でエラー: {str(e)}")
             
             company_sizes = st.multiselect(
                 "従業員規模",
