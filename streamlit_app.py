@@ -142,19 +142,24 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    # データベース初期化を最初に実行
-    initialize_database()
-    
-    st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
-    
-    # タブの追加
-    main_tab, data_tab = st.tabs(["🎯 施策提案", "📊 データ管理"])
-    
-    with data_tab:
-        show_data_management()
-    
-    with main_tab:
-        show_main_interface()
+    # データインポートUIを呼び出し
+    try:
+        from data_import_ui import main as data_import_main
+        data_import_main()
+    except ImportError:
+        # フォールバック: 元のUI
+        initialize_database()
+        
+        st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
+        
+        # タブの追加
+        main_tab, data_tab = st.tabs(["🎯 施策提案", "📊 データ管理"])
+        
+        with data_tab:
+            show_data_management()
+        
+        with main_tab:
+            show_main_interface()
 
 def initialize_database():
     """データベースとテーブルの初期化（サイレント処理）"""
