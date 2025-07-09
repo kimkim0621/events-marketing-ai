@@ -892,7 +892,77 @@ def show_knowledge_import(import_system):
 def generate_recommendations(event_name, event_category, event_theme, industries,
                            job_titles, company_sizes, target_attendees, budget,
                            event_date, is_free_event, event_format):
-    """施策提案の生成（簡易版）"""
+    """施策提案の生成（強化版）"""
+    
+    try:
+        # 強化版エンジンを使用
+        from services.enhanced_recommendation_engine import EnhancedRecommendationEngine
+        
+        engine = EnhancedRecommendationEngine()
+        
+        # イベントデータの準備
+        event_data = {
+            "event_name": event_name,
+            "event_category": event_category,
+            "event_theme": event_theme,
+            "event_format": event_format,
+            "industries": industries,
+            "job_titles": job_titles,
+            "company_sizes": company_sizes,
+            "target_attendees": target_attendees,
+            "budget": budget,
+            "event_date": event_date,
+            "is_free_event": is_free_event
+        }
+        
+        # 強化版提案の生成
+        enhanced_result = engine.generate_enhanced_recommendations(event_data)
+        
+        # 既存フォーマットに変換
+        recommendations = {
+            "event_info": {
+                "name": event_name,
+                "category": event_category,
+                "theme": event_theme,
+                "format": event_format,
+                "target_attendees": target_attendees,
+                "budget": budget,
+                "is_free": is_free_event
+            },
+            "campaigns": [],
+            "performance_analysis": enhanced_result["performance_analysis"],
+            "recommendation_basis": enhanced_result.get("recommendation_basis", {})
+        }
+        
+        # キャンペーンデータの変換
+        for campaign in enhanced_result["campaigns"]:
+            recommendations["campaigns"].append({
+                "name": campaign["name"],
+                "type": campaign["type"],
+                "description": campaign["description"],
+                "estimated_reach": campaign.get("estimated_reach", 0),
+                "estimated_conversion": campaign.get("estimated_conversions", 0),
+                "cost": campaign.get("estimated_cost", 0),
+                "cpa": campaign.get("estimated_cpa", 0),
+                "confidence": campaign.get("confidence", 0.5),
+                "applied_knowledge": campaign.get("applied_knowledge", [])
+            })
+        
+        return recommendations
+        
+    except Exception as e:
+        print(f"強化版エンジンエラー: {e}")
+        # フォールバック: 従来の簡易版を使用
+        return generate_recommendations_fallback(
+            event_name, event_category, event_theme, industries,
+            job_titles, company_sizes, target_attendees, budget,
+            event_date, is_free_event, event_format
+        )
+
+def generate_recommendations_fallback(event_name, event_category, event_theme, industries,
+                           job_titles, company_sizes, target_attendees, budget,
+                           event_date, is_free_event, event_format):
+    """施策提案の生成（フォールバック用簡易版）"""
     
     # 基本的な施策提案
     recommendations = {
@@ -958,6 +1028,17 @@ def generate_recommendations(event_name, event_category, event_theme, industries
 
 def show_recommendations_in_tab(recommendations):
     """施策提案結果をタブ内に表示"""
+    # 提案根拠の表示（新規追加）
+    if "recommendation_basis" in recommendations:
+        basis = recommendations["recommendation_basis"]
+        if basis.get("data_sources") or basis.get("key_insights"):
+            st.info("💡 **提案の根拠**")
+            if basis.get("data_sources"):
+                st.write("**データソース:**", " / ".join(basis["data_sources"]))
+            if basis.get("key_insights"):
+                for insight in basis["key_insights"]:
+                    st.write(f"- {insight}")
+    
     # 概要
     st.markdown("### 📊 概要")
     col1, col2, col3, col4 = st.columns(4)
@@ -965,20 +1046,33 @@ def show_recommendations_in_tab(recommendations):
     with col1:
         st.metric("総リーチ数", f"{recommendations['performance_analysis']['total_estimated_reach']:,}")
     with col2:
-        st.metric("予想申込数", f"{recommendations['performance_analysis']['total_estimated_conversion']:.0f}")
+        st.metric("予想申込数", f"{recommendations['performance_analysis']['total_estimated_conversions']:.0f}")
     with col3:
         st.metric("総費用", f"¥{recommendations['performance_analysis']['total_cost']:,.0f}")
     with col4:
         st.metric("平均CPA", f"¥{recommendations['performance_analysis']['average_cpa']:.0f}")
+    
+    # 目標達成率の表示（新規追加）
+    if "target_achievement_rate" in recommendations['performance_analysis']:
+        achievement_rate = recommendations['performance_analysis']['target_achievement_rate']
+        st.progress(achievement_rate)
+        st.write(f"目標達成率: {achievement_rate * 100:.1f}%")
     
     # 施策一覧
     st.markdown("### 🚀 推奨施策")
     
     for campaign in recommendations["campaigns"]:
         with st.container():
+            # 信頼度インジケーター
+            confidence = campaign.get('confidence', 0.5)
+            confidence_color = "green" if confidence > 0.8 else "orange" if confidence > 0.6 else "red"
+            
             st.markdown(f"""
             <div class="campaign-card {'free-campaign' if campaign['type'] == 'free' else 'paid-campaign'}">
-                <h4>{campaign['name']} {'🆓' if campaign['type'] == 'free' else '💰'}</h4>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4>{campaign['name']} {'🆓' if campaign['type'] == 'free' else '💰'}</h4>
+                    <span style="color: {confidence_color};">信頼度: {confidence:.0%}</span>
+                </div>
                 <p>{campaign['description']}</p>
                 <div style="display: flex; gap: 20px; margin-top: 10px;">
                     <div><strong>リーチ数:</strong> {campaign['estimated_reach']:,}</div>
@@ -988,6 +1082,12 @@ def show_recommendations_in_tab(recommendations):
                 </div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # 適用された知見の表示
+            if campaign.get('applied_knowledge'):
+                with st.expander("📚 適用された知見"):
+                    for knowledge in campaign['applied_knowledge']:
+                        st.write(f"- {knowledge['title']} (影響度: {knowledge['impact']:.1f})")
 
 if __name__ == "__main__":
     main() 
