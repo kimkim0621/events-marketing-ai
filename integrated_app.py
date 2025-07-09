@@ -680,7 +680,45 @@ def show_media_import(import_system):
                 key="media_type_input"
             )
             
-            target_industry = st.text_input("ターゲット業界", placeholder="例: IT・ソフトウェア", key="target_industry_input")
+            # 業界選択肢（左列と同じ）
+            industry_options = [
+                "すべて", "輸送用機器", "電気機器", "小売業", "卸売業", "医薬品", "その他製品", "精密機器", 
+                "不動産業", "陸運業", "鉄鋼", "鉱業", "石油・石炭製品", "非鉄金属", "空運業", 
+                "ガラス・土石製品", "パルプ・紙", "水産・農林業", "銀行業", "サービス業", "情報・通信業", 
+                "化学", "保険業", "食料品", "機械", "ゴム製品", "建設業", "証券・商品先物取引業", 
+                "電気・ガス業", "海運業", "その他金融業", "繊維製品", "金属製品", "倉庫・運輸関連業", "その他"
+            ]
+            
+            # セッション状態の初期化
+            if 'selected_media_industries' not in st.session_state:
+                st.session_state.selected_media_industries = []
+            
+            # 「すべて」選択の処理
+            def on_media_industries_change():
+                try:
+                    selected = st.session_state.get('media_industries_multiselect', [])
+                    if "すべて" in selected and "すべて" not in st.session_state.selected_media_industries:
+                        st.session_state.selected_media_industries = industry_options.copy()
+                    elif "すべて" not in selected and "すべて" in st.session_state.selected_media_industries:
+                        st.session_state.selected_media_industries = []
+                    elif "すべて" in selected:
+                        if len(selected) < len(industry_options):
+                            st.session_state.selected_media_industries = [opt for opt in selected if opt != "すべて"]
+                    else:
+                        st.session_state.selected_media_industries = selected
+                        if len(selected) == len(industry_options) - 1:
+                            st.session_state.selected_media_industries = ["すべて"] + selected
+                except Exception as e:
+                    st.error(f"業界選択でエラー: {str(e)}")
+            
+            target_industries = st.multiselect(
+                "ターゲット業界",
+                industry_options,
+                default=st.session_state.selected_media_industries,
+                key="media_industries_multiselect",
+                on_change=on_media_industries_change,
+                help="複数選択可能です。「すべて」を選択すると全業界が対象になります。"
+            )
             
             # 職種選択肢（左列と同じ）
             job_title_options = [
@@ -764,14 +802,15 @@ def show_media_import(import_system):
         
         if st.button("メディアデータを追加", key="add_media_button"):
             if media_name.strip():
-                # 表示用に実際の職種・企業規模のみを抽出
+                # 表示用に実際の業界・職種・企業規模のみを抽出
+                industries_actual = [ind for ind in target_industries if ind != "すべて"] if "すべて" not in target_industries else [ind for ind in industry_options if ind != "すべて"]
                 job_titles_actual = [jt for jt in target_job_titles if jt != "すべて"] if "すべて" not in target_job_titles else [jt for jt in job_title_options if jt != "すべて"]
                 company_sizes_actual = [cs for cs in target_company_sizes if cs != "すべて"] if "すべて" not in target_company_sizes else [cs for cs in company_size_options if cs != "すべて"]
                 
                 media_data = {
                     'media_name': media_name.strip(),
                     'reachable_count': reachable_count,
-                    'target_industry': target_industry.strip() if target_industry.strip() else None,
+                    'target_industry': ', '.join(industries_actual) if industries_actual else None,
                     'target_job_title': ', '.join(job_titles_actual) if job_titles_actual else None,
                     'target_company_size': ', '.join(company_sizes_actual) if company_sizes_actual else None,
                     'cost_excluding_tax': cost_excluding_tax,
