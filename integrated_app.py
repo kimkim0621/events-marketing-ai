@@ -91,36 +91,43 @@ def main():
     # リサイズ可能な2列レイアウト用のCSS/JavaScript
     st.markdown("""
     <style>
-    .resizable-container {
-        display: flex;
-        width: 100%;
-        min-height: 80vh;
-        position: relative;
+    .main .block-container {
+        padding-top: 1rem;
+        max-width: 100%;
+    }
+    
+    .stColumns {
+        gap: 0rem;
+    }
+    
+    .column-panel {
         border: 1px solid #e9ecef;
         border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .resizable-left {
-        flex: 0 0 50%;
         padding: 1rem;
-        overflow-y: auto;
         background: #f8f9fa;
-        border-right: 1px solid #e9ecef;
+        min-height: 600px;
+        margin-bottom: 1rem;
+        position: relative;
     }
     
-    .resizable-right {
-        flex: 1;
-        padding: 1rem;
-        overflow-y: auto;
+    .column-panel-right {
         background: #ffffff;
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .column-panel-left {
+        border-radius: 8px 0 0 8px;
     }
     
     .resize-handle {
         width: 8px;
         background: #e9ecef;
         cursor: col-resize;
-        position: relative;
+        position: absolute;
+        right: -4px;
+        top: 0;
+        bottom: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -132,6 +139,7 @@ def main():
     .resize-handle:hover {
         background: #1f77b4;
         width: 12px;
+        right: -6px;
     }
     
     .resize-handle::after {
@@ -148,11 +156,6 @@ def main():
         color: white;
     }
     
-    .column-panel {
-        min-height: 500px;
-        margin-bottom: 1rem;
-    }
-    
     .drag-instruction {
         text-align: center;
         color: #666;
@@ -166,24 +169,37 @@ def main():
     
     <script>
     function setupResizable() {
-        const container = document.querySelector('.resizable-container');
-        const leftPanel = document.querySelector('.resizable-left');
-        const rightPanel = document.querySelector('.resizable-right');
-        const handle = document.querySelector('.resize-handle');
-        
-        if (!container || !leftPanel || !rightPanel || !handle) {
+        // Streamlitの列要素を取得
+        const columns = document.querySelectorAll('[data-testid="column"]');
+        if (columns.length < 2) {
             setTimeout(setupResizable, 100);
             return;
         }
         
+        const leftColumn = columns[0];
+        const rightColumn = columns[1];
+        
+        // 既存のハンドルを削除
+        const existingHandle = leftColumn.querySelector('.resize-handle');
+        if (existingHandle) {
+            existingHandle.remove();
+        }
+        
+        // リサイズハンドルを作成
+        const handle = document.createElement('div');
+        handle.className = 'resize-handle';
+        leftColumn.appendChild(handle);
+        
         let isResizing = false;
         let startX = 0;
         let startLeftWidth = 0;
+        let startRightWidth = 0;
         
         handle.addEventListener('mousedown', (e) => {
             isResizing = true;
             startX = e.clientX;
-            startLeftWidth = leftPanel.offsetWidth;
+            startLeftWidth = leftColumn.offsetWidth;
+            startRightWidth = rightColumn.offsetWidth;
             
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
@@ -194,15 +210,18 @@ def main():
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
             
-            const containerWidth = container.offsetWidth;
             const deltaX = e.clientX - startX;
+            const totalWidth = startLeftWidth + startRightWidth;
             const newLeftWidth = startLeftWidth + deltaX;
-            const newLeftPercent = (newLeftWidth / containerWidth) * 100;
+            const newRightWidth = startRightWidth - deltaX;
+            
+            const leftPercent = (newLeftWidth / totalWidth) * 100;
+            const rightPercent = (newRightWidth / totalWidth) * 100;
             
             // 最小・最大幅の制限（20%〜80%）
-            if (newLeftPercent >= 20 && newLeftPercent <= 80) {
-                leftPanel.style.flex = `0 0 ${newLeftPercent}%`;
-                rightPanel.style.flex = '1';
+            if (leftPercent >= 20 && leftPercent <= 80) {
+                leftColumn.style.flex = `0 0 ${leftPercent}%`;
+                rightColumn.style.flex = `0 0 ${rightPercent}%`;
             }
         });
         
@@ -216,55 +235,36 @@ def main():
     }
     
     // DOM読み込み後に実行
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupResizable);
-    } else {
-        setupResizable();
-    }
-    
-    // Streamlitの再レンダリング後にも実行
     setTimeout(setupResizable, 100);
     setTimeout(setupResizable, 500);
+    setTimeout(setupResizable, 1000);
     </script>
     """, unsafe_allow_html=True)
     
     # 使用方法の説明
     st.markdown("""
     <div class="drag-instruction">
-    💡 中央の境界線をドラッグして列幅を調整できます（Cursorと同じ操作方法）
+    💡 左列の右端をドラッグして列幅を調整できます（Cursorと同じ操作方法）
     </div>
     """, unsafe_allow_html=True)
     
     # データインポートシステムの初期化
     import_system = DataImportSystem()
     
-    # HTML構造でリサイズ可能なレイアウトを作成
-    st.markdown("""
-    <div class="resizable-container">
-        <div class="resizable-left">
-            <div class="column-panel">
-                <h3>📝 施策提案のための情報入力</h3>
-                <div id="left-content"></div>
-            </div>
-        </div>
-        <div class="resize-handle"></div>
-        <div class="resizable-right">
-            <div class="column-panel">
-                <h3>📊 データインポート</h3>
-                <div id="right-content"></div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 通常のStreamlitコンテンツ（フォールバック用）
+    # 通常のStreamlitコンテンツ
     col1, col2 = st.columns([1, 1])
     
     with col1:
+        st.markdown('<div class="column-panel column-panel-left">', unsafe_allow_html=True)
+        st.markdown("### 📝 施策提案のための情報入力")
         show_proposal_input()
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
+        st.markdown('<div class="column-panel column-panel-right">', unsafe_allow_html=True)
+        st.markdown("### 📊 データインポート")
         show_data_import_interface(import_system)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 def show_proposal_input():
     """施策提案のための情報入力フォーム"""
