@@ -684,7 +684,7 @@ def show_media_import(import_system):
             
             # 職種選択肢（左列と同じ）
             job_title_options = [
-                "CTO", "VPoE", "EM", "フロントエンドエンジニア", "インフラエンジニア", 
+                "すべて", "CTO", "VPoE", "EM", "フロントエンドエンジニア", "インフラエンジニア", 
                 "フルスタックエンジニア", "モバイルエンジニア", "セキュリティエンジニア", 
                 "アプリケーションエンジニア・ソリューションアーキテクト", "データサイエンティスト", 
                 "情報システム", "ネットワークエンジニア", "UXエンジニア", "デザイナー", "学生", 
@@ -694,32 +694,86 @@ def show_media_import(import_system):
                 "エンジニア以外", "データエンジニア"
             ]
             
-            target_job_title = st.selectbox(
+            # セッション状態の初期化
+            if 'selected_media_job_titles' not in st.session_state:
+                st.session_state.selected_media_job_titles = []
+            
+            # 「すべて」選択の処理
+            def on_media_job_titles_change():
+                try:
+                    selected = st.session_state.get('media_job_titles_multiselect', [])
+                    if "すべて" in selected and "すべて" not in st.session_state.selected_media_job_titles:
+                        st.session_state.selected_media_job_titles = job_title_options.copy()
+                    elif "すべて" not in selected and "すべて" in st.session_state.selected_media_job_titles:
+                        st.session_state.selected_media_job_titles = []
+                    elif "すべて" in selected:
+                        if len(selected) < len(job_title_options):
+                            st.session_state.selected_media_job_titles = [opt for opt in selected if opt != "すべて"]
+                    else:
+                        st.session_state.selected_media_job_titles = selected
+                        if len(selected) == len(job_title_options) - 1:
+                            st.session_state.selected_media_job_titles = ["すべて"] + selected
+                except Exception as e:
+                    st.error(f"職種選択でエラー: {str(e)}")
+            
+            target_job_titles = st.multiselect(
                 "ターゲット職種",
-                [""] + job_title_options,  # 空の選択肢を最初に追加
-                key="target_job_title_input"
+                job_title_options,
+                default=st.session_state.selected_media_job_titles,
+                key="media_job_titles_multiselect",
+                on_change=on_media_job_titles_change,
+                help="複数選択可能です。「すべて」を選択すると全職種が対象になります。"
             )
         
         # 詳細情報
         # 企業規模選択肢（左列と同じ）
-        company_size_options = ["10名以下", "11名～50名", "51名～100名", "101名～300名", "301名～500名", "501名～1,000名", "1,001～5,000名", "5,001名以上"]
+        company_size_options = ["すべて", "10名以下", "11名～50名", "51名～100名", "101名～300名", "301名～500名", "501名～1,000名", "1,001～5,000名", "5,001名以上"]
         
-        target_company_size = st.selectbox(
+        # セッション状態の初期化
+        if 'selected_media_company_sizes' not in st.session_state:
+            st.session_state.selected_media_company_sizes = []
+        
+        # 「すべて」選択の処理
+        def on_media_company_sizes_change():
+            try:
+                selected = st.session_state.get('media_company_sizes_multiselect', [])
+                if "すべて" in selected and "すべて" not in st.session_state.selected_media_company_sizes:
+                    st.session_state.selected_media_company_sizes = company_size_options.copy()
+                elif "すべて" not in selected and "すべて" in st.session_state.selected_media_company_sizes:
+                    st.session_state.selected_media_company_sizes = []
+                elif "すべて" in selected:
+                    if len(selected) < len(company_size_options):
+                        st.session_state.selected_media_company_sizes = [opt for opt in selected if opt != "すべて"]
+                else:
+                    st.session_state.selected_media_company_sizes = selected
+                    if len(selected) == len(company_size_options) - 1:
+                        st.session_state.selected_media_company_sizes = ["すべて"] + selected
+            except Exception as e:
+                st.error(f"企業規模選択でエラー: {str(e)}")
+        
+        target_company_sizes = st.multiselect(
             "ターゲット企業規模",
-            [""] + company_size_options,  # 空の選択肢を最初に追加
-            key="target_company_size_input"
+            company_size_options,
+            default=st.session_state.selected_media_company_sizes,
+            key="media_company_sizes_multiselect",
+            on_change=on_media_company_sizes_change,
+            help="複数選択可能です。「すべて」を選択すると全規模が対象になります。"
         )
         description = st.text_area("説明", placeholder="例: Facebook・Instagram広告による集客", key="description_input")
         contact_info = st.text_input("連絡先情報", placeholder="例: meta-ads@example.com", key="contact_info_input")
         
         if st.button("メディアデータを追加", key="add_media_button"):
             if media_name.strip():
+                # 表示用に実際の職種・企業規模のみを抽出
+                job_titles_actual = [jt for jt in target_job_titles if jt != "すべて"] if "すべて" not in target_job_titles else [jt for jt in job_title_options if jt != "すべて"]
+                company_sizes_actual = [cs for cs in target_company_sizes if cs != "すべて"] if "すべて" not in target_company_sizes else [cs for cs in company_size_options if cs != "すべて"]
+                
                 media_data = {
                     'media_name': media_name.strip(),
                     'reachable_count': reachable_count,
                     'target_industry': target_industry.strip() if target_industry.strip() else None,
-                    'target_job_title': target_job_title if target_job_title else None,
-                    'target_company_size': target_company_size if target_company_size else None,
+                    'target_job_title': ', '.join(job_titles_actual) if job_titles_actual else None,
+                    'target_company_size': ', '.join(company_sizes_actual) if company_sizes_actual else None,
                     'cost_excluding_tax': cost_excluding_tax,
                     'media_type': media_type,
                     'description': description.strip() if description.strip() else None,
