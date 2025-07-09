@@ -38,7 +38,8 @@ st.markdown("""
         font-weight: bold;
         color: #1f77b4;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
+        margin-top: 0;
     }
     .sub-header {
         font-size: 1.5rem;
@@ -81,6 +82,25 @@ st.markdown("""
         border: 1px solid #e9ecef;
         margin-bottom: 1rem;
     }
+    
+    /* Streamlitのデフォルト余白を完全に削除 */
+    .main .block-container {
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+        max-width: 100% !important;
+    }
+    
+    .stApp > header {
+        background-color: transparent !important;
+    }
+    
+    .stApp {
+        margin-top: 0 !important;
+    }
+    
+    div[data-testid="stToolbar"] {
+        display: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -91,13 +111,9 @@ def main():
     # リサイズ可能な2列レイアウト用のCSS/JavaScript
     st.markdown("""
     <style>
-    .main .block-container {
-        padding-top: 1rem;
-        max-width: 100%;
-    }
-    
     .stColumns {
         gap: 0rem;
+        margin-top: 0 !important;
     }
     
     .column-panel {
@@ -107,6 +123,7 @@ def main():
         background: #f8f9fa;
         min-height: 600px;
         position: relative;
+        margin-top: 0 !important;
     }
     
     .column-panel-right {
@@ -155,13 +172,26 @@ def main():
         color: white;
     }
     
-    /* 不要な余白を削除 */
+    /* 全体的な余白を削除 */
     .element-container {
         margin: 0 !important;
+        padding: 0 !important;
     }
     
     .stMarkdown {
         margin-bottom: 0.5rem;
+        margin-top: 0 !important;
+    }
+    
+    /* 列の余白を削除 */
+    div[data-testid="column"] {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    div[data-testid="column"] > div {
+        padding: 0 !important;
+        margin: 0 !important;
     }
     </style>
     
