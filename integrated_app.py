@@ -83,11 +83,24 @@ def main():
     """メインアプリケーション"""
     st.markdown('<h1 class="main-header">🎯 イベント集客施策提案AI</h1>', unsafe_allow_html=True)
     
+    # サイドバーで列幅の調整
+    with st.sidebar:
+        st.markdown("### ⚙️ レイアウト設定")
+        col_ratio = st.slider(
+            "左右の列幅比率",
+            min_value=0.2,
+            max_value=0.8,
+            value=0.5,
+            step=0.1,
+            help="左の列（施策提案）の幅を調整します。0.5が同じ幅です。"
+        )
+        st.markdown("---")
+    
     # データインポートシステムの初期化
     import_system = DataImportSystem()
     
-    # 2列レイアウト
-    col1, col2 = st.columns([1, 1])
+    # 2列レイアウト（動的な幅調整）
+    col1, col2 = st.columns([col_ratio, 1-col_ratio])
     
     with col1:
         st.markdown("## 📝 施策提案のための情報入力")
