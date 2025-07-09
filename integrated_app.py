@@ -33,6 +33,63 @@ st.set_page_config(
 # 基本CSS
 st.markdown("""
 <style>
+    /* Streamlitのデフォルト余白を完全に削除 */
+    .main .block-container {
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 100% !important;
+    }
+    
+    .stApp > header {
+        background-color: transparent !important;
+        height: 0px !important;
+    }
+    
+    .stApp {
+        margin-top: 0 !important;
+    }
+    
+    div[data-testid="stToolbar"] {
+        display: none !important;
+    }
+    
+    /* Streamlitのヘッダーを非表示 */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    
+    /* メインコンテンツの余白を削除 */
+    .main {
+        padding-top: 0rem !important;
+    }
+    
+    /* 最上部の余白を削除 */
+    .stApp > div:first-child {
+        padding-top: 0 !important;
+    }
+    
+    /* 包括的な余白リセット */
+    .stApp, .main, .block-container, .element-container {
+        margin: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* 最初の子要素の余白を削除 */
+    .main > div:first-child,
+    .block-container > div:first-child,
+    .element-container:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* Streamlitのデフォルトスタイルを上書き */
+    .css-1d391kg, .css-18e3th9, .css-1dp5vir {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+    
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
@@ -40,6 +97,7 @@ st.markdown("""
         text-align: center;
         margin-bottom: 1rem;
         margin-top: 0;
+        padding-top: 0;
     }
     .sub-header {
         font-size: 1.5rem;
@@ -81,25 +139,6 @@ st.markdown("""
         border-radius: 0.5rem;
         border: 1px solid #e9ecef;
         margin-bottom: 1rem;
-    }
-    
-    /* Streamlitのデフォルト余白を完全に削除 */
-    .main .block-container {
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
-        max-width: 100% !important;
-    }
-    
-    .stApp > header {
-        background-color: transparent !important;
-    }
-    
-    .stApp {
-        margin-top: 0 !important;
-    }
-    
-    div[data-testid="stToolbar"] {
-        display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -192,6 +231,18 @@ def main():
     div[data-testid="column"] > div {
         padding: 0 !important;
         margin: 0 !important;
+    }
+    
+    /* 最初の要素の余白を削除 */
+    div[data-testid="column"] > div:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    /* ブロック要素の余白を削除 */
+    .block-container > div:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
     </style>
     
