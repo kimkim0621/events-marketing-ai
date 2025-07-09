@@ -15,7 +15,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # データインポートシステムのインポート
-from data_import_ui import DataImportSystem
+try:
+    from data_import_ui import DataImportSystem
+except ImportError as e:
+    st.error(f"データインポートシステムのインポートエラー: {e}")
+    st.error("data_import_ui.pyファイルが見つかりません。")
+    st.stop()
 
 # ページ設定
 st.set_page_config(
