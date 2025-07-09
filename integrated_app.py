@@ -222,84 +222,174 @@ def show_proposal_input():
         st.markdown("### 🎯 基本情報")
         event_name = st.text_input("イベント名", placeholder="例: AI技術セミナー")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            event_category = st.selectbox(
-                "イベントカテゴリ",
-                ["conference", "seminar", "workshop", "webinar", "networking"],
-                format_func=lambda x: {
-                    "conference": "カンファレンス",
-                    "seminar": "セミナー", 
-                    "workshop": "ワークショップ",
-                    "webinar": "ウェビナー",
-                    "networking": "ネットワーキング"
-                }[x]
-            )
+        event_category = st.selectbox(
+            "イベントカテゴリ",
+            ["conference", "seminar", "workshop", "webinar", "networking", "product_launch"],
+            format_func=lambda x: {
+                "conference": "カンファレンス",
+                "seminar": "セミナー", 
+                "workshop": "ワークショップ",
+                "webinar": "ウェビナー",
+                "networking": "ネットワーキング",
+                "product_launch": "製品発表"
+            }[x]
+        )
         
-        with col2:
-            event_format = st.selectbox(
-                "開催形式",
-                ["hybrid", "online", "offline"],
-                format_func=lambda x: {
-                    "hybrid": "ハイブリッド",
-                    "online": "オンライン",
-                    "offline": "オフライン"
-                }[x]
-            )
-        
-        # テーマ
-        st.markdown("### 🎨 テーマ")
-        event_theme = st.text_area("イベントテーマ", placeholder="例: 最新AI技術の実用化と今後の展望")
+        event_theme = st.text_area("イベントテーマ・内容", placeholder="例: 最新のAI技術動向と実践事例")
         
         # ターゲット設定
         st.markdown("### 🎯 ターゲット設定")
         
+        with st.expander("🏢 業種選択 (34業種)", expanded=True):
+            # 業種の選択肢（「すべて」を最上段に追加）
+            industry_options = ["すべて", "輸送用機器", "電気機器", "小売業", "卸売業", "医薬品", "その他製品", "精密機器", "不動産業", "陸運業", "鉄鋼", "鉱業", "石油・石炭製品", "非鉄金属", "空運業", "ガラス・土石製品", "パルプ・紙", "水産・農林業", "銀行業", "サービス業", "情報・通信業", "化学", "保険業", "食料品", "機械", "ゴム製品", "建設業", "証券、商品先物取引業", "電気・ガス業", "海運業", "その他金融業", "繊維製品", "金属製品", "倉庫・運輸関連業", "その他"]
+            
+            # セッション状態の初期化
+            if 'selected_industries_integrated' not in st.session_state:
+                st.session_state.selected_industries_integrated = ["情報・通信業"]
+            
+            # 「すべて」選択の処理
+            def on_industries_integrated_change():
+                selected = st.session_state.industries_integrated_multiselect
+                if "すべて" in selected and "すべて" not in st.session_state.selected_industries_integrated:
+                    # 「すべて」が新しく選択された場合
+                    st.session_state.selected_industries_integrated = industry_options.copy()
+                elif "すべて" not in selected and "すべて" in st.session_state.selected_industries_integrated:
+                    # 「すべて」が解除された場合
+                    st.session_state.selected_industries_integrated = []
+                elif "すべて" in selected:
+                    # 「すべて」が選択されている状態で他が変更された場合
+                    if len(selected) < len(industry_options):
+                        # 一部解除された場合、「すべて」を除外
+                        st.session_state.selected_industries_integrated = [opt for opt in selected if opt != "すべて"]
+                else:
+                    # 通常の選択
+                    st.session_state.selected_industries_integrated = selected
+                    # 全て選択されている場合、「すべて」を追加
+                    if len(selected) == len(industry_options) - 1:
+                        st.session_state.selected_industries_integrated = ["すべて"] + selected
+            
+            industries = st.multiselect(
+                "業種",
+                industry_options,
+                default=st.session_state.selected_industries_integrated,
+                key="industries_integrated_multiselect",
+                on_change=on_industries_integrated_change,
+                help="複数選択可能です。「すべて」を選択すると全業種が対象になります。"
+            )
+            
+            # 表示用に実際の業種のみを抽出
+            industries_actual = [ind for ind in industries if ind != "すべて"] if "すべて" not in industries else [ind for ind in industry_options if ind != "すべて"]
+        
+        with st.expander("👥 職種選択 (31職種)", expanded=True):
+            # 職種の選択肢（「すべて」を最上段に追加）
+            job_title_options = ["すべて", "CTO", "VPoE", "EM", "フロントエンドエンジニア", "インフラエンジニア", "フルスタックエンジニア", "モバイルエンジニア", "セキュリティエンジニア", "アプリケーションエンジニア・ソリューションアーキテクト", "データサイエンティスト", "情報システム", "ネットワークエンジニア", "UXエンジニア", "デザイナー", "学生", "データアナリスト", "CPO", "VPoT/VPoP", "テックリード", "バックエンドエンジニア", "SRE", "プロダクトマネージャー", "DevOpsエンジニア", "QAエンジニア", "機械学習エンジニア", "プロジェクトマネージャー", "SIer", "ゲーム開発エンジニア", "組み込みエンジニア", "エンジニア以外", "データエンジニア"]
+            
+            # セッション状態の初期化
+            if 'selected_job_titles_integrated' not in st.session_state:
+                st.session_state.selected_job_titles_integrated = ["フロントエンドエンジニア", "バックエンドエンジニア"]
+            
+            # 「すべて」選択の処理
+            def on_job_titles_integrated_change():
+                selected = st.session_state.job_titles_integrated_multiselect
+                if "すべて" in selected and "すべて" not in st.session_state.selected_job_titles_integrated:
+                    st.session_state.selected_job_titles_integrated = job_title_options.copy()
+                elif "すべて" not in selected and "すべて" in st.session_state.selected_job_titles_integrated:
+                    st.session_state.selected_job_titles_integrated = []
+                elif "すべて" in selected:
+                    if len(selected) < len(job_title_options):
+                        st.session_state.selected_job_titles_integrated = [opt for opt in selected if opt != "すべて"]
+                else:
+                    st.session_state.selected_job_titles_integrated = selected
+                    if len(selected) == len(job_title_options) - 1:
+                        st.session_state.selected_job_titles_integrated = ["すべて"] + selected
+            
+            job_titles = st.multiselect(
+                "職種",
+                job_title_options,
+                default=st.session_state.selected_job_titles_integrated,
+                key="job_titles_integrated_multiselect",
+                on_change=on_job_titles_integrated_change,
+                help="複数選択可能です。「すべて」を選択すると全職種が対象になります。"
+            )
+            
+            # 表示用に実際の職種のみを抽出
+            job_titles_actual = [jt for jt in job_titles if jt != "すべて"] if "すべて" not in job_titles else [jt for jt in job_title_options if jt != "すべて"]
+        
+        with st.expander("📊 従業員規模選択 (8段階)", expanded=False):
+            # 従業員規模の選択肢（「すべて」を最上段に追加）
+            company_size_options = ["すべて", "10名以下", "11名～50名", "51名～100名", "101名～300名", "301名～500名", "501名～1,000名", "1,001～5,000名", "5,001名以上"]
+            
+            # セッション状態の初期化
+            if 'selected_company_sizes_integrated' not in st.session_state:
+                st.session_state.selected_company_sizes_integrated = ["101名～300名", "301名～500名"]
+            
+            # 「すべて」選択の処理
+            def on_company_sizes_integrated_change():
+                selected = st.session_state.company_sizes_integrated_multiselect
+                if "すべて" in selected and "すべて" not in st.session_state.selected_company_sizes_integrated:
+                    st.session_state.selected_company_sizes_integrated = company_size_options.copy()
+                elif "すべて" not in selected and "すべて" in st.session_state.selected_company_sizes_integrated:
+                    st.session_state.selected_company_sizes_integrated = []
+                elif "すべて" in selected:
+                    if len(selected) < len(company_size_options):
+                        st.session_state.selected_company_sizes_integrated = [opt for opt in selected if opt != "すべて"]
+                else:
+                    st.session_state.selected_company_sizes_integrated = selected
+                    if len(selected) == len(company_size_options) - 1:
+                        st.session_state.selected_company_sizes_integrated = ["すべて"] + selected
+            
+            company_sizes = st.multiselect(
+                "従業員規模",
+                company_size_options,
+                default=st.session_state.selected_company_sizes_integrated,
+                key="company_sizes_integrated_multiselect",
+                on_change=on_company_sizes_integrated_change,
+                help="複数選択可能です。「すべて」を選択すると全規模が対象になります。"
+            )
+            
+            # 表示用に実際の従業員規模のみを抽出
+            company_sizes_actual = [cs for cs in company_sizes if cs != "すべて"] if "すべて" not in company_sizes else [cs for cs in company_size_options if cs != "すべて"]
+        
+        # 目標・予算設定
+        st.markdown("### 💰 目標・予算設定")
+        
         col1, col2 = st.columns(2)
         with col1:
-            industries = st.multiselect(
-                "ターゲット業界",
-                ["IT・ソフトウェア", "製造業", "金融・保険", "小売・EC", "医療・ヘルスケア", "教育", "コンサルティング", "その他"],
-                default=["IT・ソフトウェア"]
-            )
+            target_attendees = st.number_input("目標申込人数", min_value=1, value=100, step=10)
+            budget = st.number_input("集客予算（円）", min_value=0, value=500000, step=50000)
         
         with col2:
-            job_titles = st.multiselect(
-                "ターゲット職種",
-                ["エンジニア", "マネージャー", "CTO", "データサイエンティスト", "プロダクトマネージャー", "営業", "マーケティング", "その他"],
-                default=["エンジニア"]
+            event_date = st.date_input(
+                "開催日",
+                value=datetime.now().date() + timedelta(days=30),
+                min_value=datetime.now().date()
             )
+            is_free_event = st.checkbox("無料イベント", value=True)
         
-        company_sizes = st.multiselect(
-            "企業規模",
-            ["1-100名", "101-1000名", "1001-5000名", "5001名以上"],
-            default=["101-1000名"]
+        event_format = st.selectbox(
+            "開催形式",
+            ["online", "offline", "hybrid"],
+            format_func=lambda x: {"online": "オンライン", "offline": "オフライン", "hybrid": "ハイブリッド"}[x]
         )
         
-        # 予算・規模
-        st.markdown("### 💰 予算・規模")
-        col1, col2 = st.columns(2)
-        with col1:
-            target_attendees = st.number_input("目標参加者数", min_value=1, value=100, step=10)
-            budget = st.number_input("予算（円）", min_value=0, value=1000000, step=100000)
-        
-        with col2:
-            event_date = st.date_input("開催予定日", value=datetime.now().date() + timedelta(days=30))
-            is_free_event = st.checkbox("無料イベント", value=True)
+        # AI予測エンジン選択
+        use_ai_engine = st.checkbox("🧠 高度AI予測エンジンを使用", value=False, help="機械学習ベースの高度な予測を行います（ベータ版）")
         
         # 提案実行ボタン
         if st.button("🚀 施策提案を実行", type="primary", use_container_width=True):
-            if event_name and event_theme:
+            if event_name and event_theme and industries_actual and job_titles_actual:
                 with st.spinner("施策を分析中..."):
                     recommendations = generate_recommendations(
-                        event_name, event_category, event_theme, industries,
-                        job_titles, company_sizes, target_attendees, budget,
+                        event_name, event_category, event_theme, industries_actual,
+                        job_titles_actual, company_sizes_actual, target_attendees, budget,
                         event_date, is_free_event, event_format
                     )
                     
                     # 結果を表示
                     show_recommendations(recommendations)
             else:
-                st.error("イベント名とテーマを入力してください")
+                st.error("必須項目（イベント名、テーマ、業種、職種）を入力してください")
         
         st.markdown('</div>', unsafe_allow_html=True)
 
